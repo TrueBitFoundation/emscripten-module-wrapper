@@ -43,5 +43,5 @@ console.log(JSON.stringify(env_globals))
 
 var fs = require("fs")
 
-fs.writeFileSync("globals.json", JSON.stringify(env_globals))
+fs.writeFileSync(source_file + ".globals.json", JSON.stringify(env_globals))
 
