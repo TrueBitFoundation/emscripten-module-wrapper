@@ -41,3 +41,7 @@ for (i in global_info.env) {
 
 console.log(JSON.stringify(env_globals))
 
+var fs = require("fs")
+
+fs.writeFileSync("globals.json", JSON.stringify(env_globals))
+
