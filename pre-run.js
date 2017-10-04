@@ -13,6 +13,18 @@ for (i in Module) {
 
 var env_globals = {}
 
+var calls = []
+
+function makeStub(name, func) {
+    return function () {
+        console.log("Calling ", name, arguments)
+        var res = func.apply(null, arguments)
+        calls.push({result: res, args:Array.from(arguments), name:name})
+        console.log("Result", res)
+        return res
+    }
+}
+
 for (i in global_info.env) {
     if (typeof global_info.env[i] == "number") {
         console.log(i + ": " + global_info.env[i])
@@ -20,9 +32,7 @@ for (i in global_info.env) {
     }
     else {
         console.log(i + ": " + typeof global_info.env[i])
-/*        if (typeof global_info.env[i] == "function") global_info.env[i] = function () {
-            console.log("blah")
-        } */
+        if (typeof global_info.env[i] == "function") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
 }
