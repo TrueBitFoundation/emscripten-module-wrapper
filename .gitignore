@@ -3,3 +3,4 @@
 *.prep.js
 *.o
 *.json
+*.bin
