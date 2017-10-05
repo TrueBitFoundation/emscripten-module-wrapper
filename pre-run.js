@@ -94,8 +94,13 @@ function outputCall(call) {
     h32.forEach(x => { u32(x[0]); u32(x[1]) })
 }
 
-u32(calls.length)
-calls.forEach(outputCall)
+function outputRecord() {
+    console.log("Writing record")
+    u32(calls.length)
+    calls.forEach(outputCall)
 
-fs.writeFileSync(source_file + ".calls.bin", Buffer.from(arr))
+    fs.writeFileSync(source_file + ".calls.bin", Buffer.from(arr))
+}
+
+addOnExit(outputRecord)
 
