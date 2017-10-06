@@ -40,7 +40,13 @@ for (i in global_info.env) {
 
 // console.log(global_info)
 
-console.log(JSON.stringify(env_globals))
+var saved_globals = {
+    mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
+    env: env_globals,
+}
+
+console.log(JSON.stringify(saved_globals))
+
 
 console.log(memory_record)
 
@@ -100,7 +106,7 @@ function outputRecord() {
     calls.forEach(outputCall)
 
     fs.writeFileSync(source_dir + "/record.bin", Buffer.from(arr))
-    fs.writeFileSync(source_dir + "/globals.json", JSON.stringify(env_globals))
+    fs.writeFileSync(source_dir + "/globals.json", JSON.stringify(saved_globals))
 }
 
 addOnExit(outputRecord)

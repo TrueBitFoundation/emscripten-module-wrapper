@@ -12,10 +12,10 @@ sed -e 's/{{PRE_RUN_ADDITIONS}}/\n#include "\.\.\/pre-run.js"/g' \
     $A.js > $A.tmp/hooked.js
 
 echo "var source_dir = \"$A.tmp\";" > $A.tmp/prep.js
-cpp -I .. -P $1.tmp/hooked.js >> $A.tmp/prep.js
+cpp -I .. -P $A.tmp/hooked.js >> $A.tmp/prep.js
 
 ## Run the program, generates globals.json and record.bin
-nodejs $A.tmp/prep.js || exit 1
+nodejs $A.tmp/prep.js foo_arg || exit 1
 
 ## merge file system
 ./ocaml-offchain/interpreter/wasm -merge $A.wasm ocaml-offchain/interpreter/filesystem.wasm && mv merge.wasm $A.tmp
