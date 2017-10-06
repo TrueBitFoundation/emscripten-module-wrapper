@@ -42,6 +42,8 @@ for (i in global_info.env) {
 
 console.log(JSON.stringify(env_globals))
 
+console.log(memory_record)
+
 // writing calls
 
 var arr = []

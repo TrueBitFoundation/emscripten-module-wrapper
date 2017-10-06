@@ -11,15 +11,17 @@ function startMemoryRecord() {
 
 startMemoryRecord()
 
+var trace_memory = true;
+
 function makeWrapper(view, id) {
     return new Proxy(view, {
         get: function(target, name) {
-            // console.log("Getting ", name)
+            if (trace_memory) console.log("Getting ", name, "from", id)
             memory_record[id].push(name)
             return target[name]
         },
         set: function(target, name, value) {
-            // console.log("Setting ", name)
+            if (trace_memory) console.log("Setting ", name, "from", id)
             memory_record[id].push([name,value])
             target[name] = value
         }
