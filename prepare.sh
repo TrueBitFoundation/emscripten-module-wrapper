@@ -21,6 +21,8 @@ nodejs $A.tmp/prep.js || exit 1
 ./ocaml-offchain/interpreter/wasm -merge $A.wasm ocaml-offchain/interpreter/filesystem.wasm && mv merge.wasm $A.tmp
 
 ## merge globals
+./ocaml-offchain/interpreter/wasm -add-globals $A.tmp/globals.json $A.tmp/merge.wasm && mv globals.wasm $A.tmp
 
 ## Run with off-chain interpreter
+./ocaml-offchain/interpreter/wasm -m -table-size 1024 -memory-size $[1024*16*2] -wasm $A.tmp/globals.wasm
 
