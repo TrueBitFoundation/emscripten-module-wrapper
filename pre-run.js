@@ -42,10 +42,6 @@ for (i in global_info.env) {
 
 console.log(JSON.stringify(env_globals))
 
-var fs = require("fs")
-
-fs.writeFileSync(source_file + ".globals.json", JSON.stringify(env_globals))
-
 // writing calls
 
 var arr = []
@@ -94,13 +90,17 @@ function outputCall(call) {
     h32.forEach(x => { u32(x[0]); u32(x[1]) })
 }
 
+var fs = require("fs")
+
 function outputRecord() {
     console.log("Writing record")
     u32(calls.length)
     calls.forEach(outputCall)
 
-    fs.writeFileSync(source_file + ".calls.bin", Buffer.from(arr))
+    fs.writeFileSync(source_dir + "/record.bin", Buffer.from(arr))
+    fs.writeFileSync(source_dir + "/globals.json", JSON.stringify(env_globals))
 }
 
 addOnExit(outputRecord)
+
 
