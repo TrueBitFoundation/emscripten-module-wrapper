@@ -40,11 +40,15 @@ for (i in global_info.env) {
 
 // console.log(global_info)
 
-console.log(JSON.stringify(env_globals))
+var saved_globals = {
+    mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
+    env: env_globals,
+}
 
-var fs = require("fs")
+console.log(JSON.stringify(saved_globals))
 
-fs.writeFileSync(source_file + ".globals.json", JSON.stringify(env_globals))
+
+console.log(memory_record)
 
 // writing calls
 
@@ -94,13 +98,17 @@ function outputCall(call) {
     h32.forEach(x => { u32(x[0]); u32(x[1]) })
 }
 
+var fs = require("fs")
+
 function outputRecord() {
     console.log("Writing record")
     u32(calls.length)
     calls.forEach(outputCall)
 
-    fs.writeFileSync(source_file + ".calls.bin", Buffer.from(arr))
+    fs.writeFileSync(source_dir + "/record.bin", Buffer.from(arr))
+    fs.writeFileSync(source_dir + "/globals.json", JSON.stringify(saved_globals))
 }
 
 addOnExit(outputRecord)
+
 
