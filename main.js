@@ -2498,8 +2498,6 @@ Module['callMain'] = Module.callMain = function callMain(args) {
   args = args || [];
 
   ensureInitRuntime();
-    
-    console.log("run time initialized", args)
 
   var argc = args.length+1;
   function pad() {
@@ -2581,10 +2579,7 @@ function run(args) {
       Module.printErr('pre-main prep time: ' + (Date.now() - preloadStartTime) + ' ms');
     }
 
-    if (Module['onRuntimeInitialized']) {
-        console.log("some initialization")
-        Module['onRuntimeInitialized']();
-    }
+    if (Module['onRuntimeInitialized']) Module['onRuntimeInitialized']();
 
     if (Module['_main'] && shouldRunNow) Module['callMain'](args);
 
