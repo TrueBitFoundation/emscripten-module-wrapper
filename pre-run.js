@@ -54,6 +54,7 @@ for (i in global_info.env) {
 var saved_globals = {
     mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
     env: env_globals,
+    total_memory: TOTAL_MEMORY,
 }
 
 console.log(JSON.stringify(saved_globals))
