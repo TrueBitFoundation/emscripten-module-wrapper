@@ -16,7 +16,8 @@ var env_globals = {}
 var trace_calls = false
 var trace_calls = true
 
-var recording = true
+var recording_calls = true
+var recording = false
 
 var calls = []
 
@@ -24,17 +25,27 @@ function makeStub(name, func) {
     console.log("Stub: " + name)
     return function () {
         if (trace_calls) console.log("Calling ", name, arguments)
-        startMemoryRecord()
+        if (recording) startMemoryRecord()
         var res = func.apply(null, arguments)
-        if (recording) {
-            var obj = {result: res, args:Array.from(arguments), name:name, memory:memory_record}
-            console.log(obj)
+        // console.log("what here: ", HEAP32[5153])
+        if (recording_calls) {
+            var obj = {result: res || 0, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
+            // var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
+            // console.log(obj)
             outputCall(obj)
         }
         // calls.push({result: res, args:Array.from(arguments), name:name, memory:memory_record})
         if (trace_calls) console.log("Result", res)
         return res
     }
+}
+
+var implemented = {
+    "getTotalMemory": true,
+    "_emscripten_memcpy_big": true,
+    "___syscall4": true, // write
+    "___syscall146": true, // writev
+    "___syscall3": true,
 }
 
 for (i in global_info.env) {
@@ -44,18 +55,27 @@ for (i in global_info.env) {
     }
     else {
         // console.log(i + ": " + typeof global_info.env[i])
-        if (typeof global_info.env[i] == "function" && i != "getTotalMemory" && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        if (typeof global_info.env[i] == "function" && !implemented[i] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        // if (typeof global_info.env[i] == "function") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
 }
 
 // console.log(global_info)
 
-var saved_globals = {
-    mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
-    env: env_globals,
-    total_memory: TOTAL_MEMORY,
+var saved_globals = {}
+
+function saveGlobals() {
+    saved_globals = {
+        mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
+        env: env_globals,
+        total_memory: TOTAL_MEMORY,
+    }
+    recording_calls = true
+    recording = true
 }
+
+addOnPreMain(saveGlobals)
 
 console.log(JSON.stringify(saved_globals))
 
@@ -136,7 +156,7 @@ function outputRecord() {
     
     // rs.end(function () { console.log("???? what") })
     fs.closeSync(record_file)
-    recording = false
+    recording_calls = false
 
     // fs.writeFileSync(source_dir + "/record.bin", Buffer.from(arr))
     fs.writeFileSync(source_dir + "/globals.json", JSON.stringify(saved_globals))

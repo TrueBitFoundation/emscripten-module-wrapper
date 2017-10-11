@@ -25,5 +25,5 @@ nodejs $A.tmp/prep.js foo_arg || exit 1
 
 ## Run with off-chain interpreter
 cd $A.tmp
-../ocaml-offchain/interpreter/wasm -m -file record.bin -table-size $[1024*1024] -memory-size $[1024] -wasm globals.wasm
+../ocaml-offchain/interpreter/wasm -m -file record.bin -table-size $[1024*1024] -stack-size $[1024*1024] -memory-size $[1024] -wasm globals.wasm
 

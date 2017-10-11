@@ -11,8 +11,8 @@ function startMemoryRecord() {
 
 startMemoryRecord()
 
-// var trace_memory = false
-var trace_memory = true
+var trace_memory = false
+// var trace_memory = true
 
 function makeWrapper(view, id) {
     return new Proxy(view, {
