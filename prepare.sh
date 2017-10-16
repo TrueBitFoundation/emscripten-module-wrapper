@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export A=${1%.js}
 
@@ -15,7 +15,7 @@ echo "var source_dir = \"$A.tmp\";" > $A.tmp/prep.js
 cpp -I .. -P $A.tmp/hooked.js >> $A.tmp/prep.js
 
 ## Run the program, generates globals.json and record.bin
-nodejs $A.tmp/prep.js foo_arg || exit 1
+nodejs $A.tmp/prep.js foo_arg
 
 ## merge file system
 ./ocaml-offchain/interpreter/wasm -merge $A.wasm ocaml-offchain/interpreter/filesystem.wasm && mv merge.wasm $A.tmp
