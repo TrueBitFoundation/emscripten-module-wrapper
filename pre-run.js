@@ -45,7 +45,9 @@ var implemented = {
     "_emscripten_memcpy_big": true,
     "___syscall4": true, // write
     "___syscall146": true, // writev
+    "__syscall146": true, // writev
     "___syscall3": true,
+    "sbrk": true,
 }
 
 for (i in global_info.env) {
