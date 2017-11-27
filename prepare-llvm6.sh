@@ -17,19 +17,19 @@ echo "var source_dir = \"$A.tmp\";" > $A.tmp/prep.js
 cpp -I .. -P $A.tmp/hooked.js >> $A.tmp/prep.js
 
 ## Run the program, generates globals.json and record.bin
-nodejs $A.tmp/prep.js foo_arg
+nodejs $A.tmp/prep.js $2 $3
 
-OCAML=../webasm/interpreter/wasm
+OCAML=../webasm/interpreter
 
-$OCAML -underscore $A.wasm && mv underscore.wasm $A.tmp
+$OCAML/wasm -underscore $A.wasm && mv underscore.wasm $A.tmp
 
 ## merge file system
-$OCAML -merge $A.tmp/underscore.wasm ocaml-offchain/interpreter/filesystem.wasm && mv merge.wasm $A.tmp
+$OCAML/wasm -merge $A.tmp/underscore.wasm $OCAML/filesystem.wasm && mv merge.wasm $A.tmp
 
 ## merge globals
-$OCAML -add-globals $A.tmp/globals.json $A.tmp/merge.wasm && mv globals.wasm $A.tmp
+$OCAML/wasm -add-globals $A.tmp/globals.json $A.tmp/merge.wasm && mv globals.wasm $A.tmp
 
 ## Run with off-chain interpreter
 cd $A.tmp
-../$OCAML -m -file record.bin -table-size 20 -stack-size 20 -memory-size 25 -wasm globals.wasm
+../$OCAML/wasm -m -file record.bin -table-size 20 -stack-size 20 -memory-size 25 -wasm globals.wasm -arg $2 -arg $3
 

@@ -31,7 +31,7 @@ function makeStub(name, func) {
         if (recording_calls) {
             var obj = {result: res || 0, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
             // var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
-            if (trace_calls) console.log(memory_record)
+            if (trace_calls && recording) console.log(memory_record)
             outputCall(obj)
         }
         // calls.push({result: res, args:Array.from(arguments), name:name, memory:memory_record})

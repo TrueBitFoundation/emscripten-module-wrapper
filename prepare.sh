@@ -15,7 +15,7 @@ echo "var source_dir = \"$A.tmp\";" > $A.tmp/prep.js
 cpp -I .. -P $A.tmp/hooked.js >> $A.tmp/prep.js
 
 ## Run the program, generates globals.json and record.bin
-nodejs $A.tmp/prep.js foo_arg
+nodejs $A.tmp/prep.js $2
 
 ## merge file system
 ./ocaml-offchain/interpreter/wasm -merge $A.wasm ocaml-offchain/interpreter/filesystem.wasm && mv merge.wasm $A.tmp
@@ -25,5 +25,5 @@ nodejs $A.tmp/prep.js foo_arg
 
 ## Run with off-chain interpreter
 cd $A.tmp
-../ocaml-offchain/interpreter/wasm -m -file record.bin -table-size 20 -stack-size 20 -memory-size 25 -wasm globals.wasm
+../ocaml-offchain/interpreter/wasm -m -file record.bin -table-size 20 -stack-size 20 -memory-size 25 -arg $2 -wasm globals.wasm
 
