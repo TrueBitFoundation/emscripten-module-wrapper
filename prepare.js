@@ -27,6 +27,10 @@ function exec(cmd, args, dr) {
     })
 }
 
+function flatten(lst) {
+    return [].concat.apply([],lst)
+}
+
 async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
@@ -39,11 +43,16 @@ async function processTask(fname) {
     
     await exec("cp", [wasm_file, tmp_dir + "/" + wasm_file], process.cwd())
     
-    await exec("node", ["prepared.js"])
+    argv.arg = argv.arg || []
+    argv.file = argv.file || []
+    
+    await exec("node", ["prepared.js"].concat(argv.arg))
     await exec(wasm, ["-underscore", wasm_file])
     await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
-    await exec(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", "25", "-wasm", "globals.wasm"])
+    var args = flatten(argv.arg.map(a => ["-arg", a]))
+    args = args.concat(flatten(argv.file.map(a => ["-file", a])))
+    await exec(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", "25", "-wasm", "globals.wasm"].concat(args))
 }
 
 argv._.forEach(processTask)
