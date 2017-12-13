@@ -36,7 +36,9 @@ async function processTask(fname) {
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
     str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
+    str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
     str = str.replace(/updateGlobalBufferViews\(\);/, "updateGlobalBufferViews(); addHeapHooks();")
+    str = str.replace(/FS.createStandardStreams\(\);/, "console.log('hreher'); FS.createStandardStreams(); FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'); FS.chdir('/working');")
     fs.writeFileSync(tmp_dir + "/prepared.js", 'var source_dir = "' + tmp_dir + '"\n' + str)
     
     var wasm_file = fname.replace(/.js$/, ".wasm")
@@ -45,6 +47,15 @@ async function processTask(fname) {
     
     argv.arg = argv.arg || []
     argv.file = argv.file || []
+    
+    if (typeof argv.file == "string") argv.file = [argv.file]
+    if (typeof argv.arg == "string") argv.arg = [argv.arg]
+
+    console.log(argv)
+    for (var i = 0; i < argv.file.length; i++) {
+        await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+    }
+    
     
     await exec("node", ["prepared.js"].concat(argv.arg))
     await exec(wasm, ["-underscore", wasm_file])
