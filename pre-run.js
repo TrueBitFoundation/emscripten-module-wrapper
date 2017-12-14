@@ -21,6 +21,11 @@ var recording = false
 
 var calls = []
 
+var no_return = {
+    "__lock": true,
+    "__unlock": true,
+}
+
 function makeStub(name, func) {
     console.log("Stub: " + name)
     return function () {
@@ -29,9 +34,10 @@ function makeStub(name, func) {
         var res = func.apply(null, arguments)
         // console.log("what here: ", HEAP32[5153])
         if (recording_calls) {
-            var obj = {result: res || 0, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
+            var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
+            if (!no_return[name]) obj.result = obj.result || 0
             // var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
-            if (trace_calls) console.log(memory_record)
+            if (trace_calls && recording) console.log(memory_record)
             outputCall(obj)
         }
         // calls.push({result: res, args:Array.from(arguments), name:name, memory:memory_record})
@@ -43,8 +49,11 @@ function makeStub(name, func) {
 var implemented = {
     "getTotalMemory": true,
     "_emscripten_memcpy_big": true,
+    "__syscall5": true, // open
     "___syscall4": true, // write
     "___syscall146": true, // writev
+    "___syscall145": true, // readv
+    "__syscall145": true, // readv
     "__syscall146": true, // writev
     "___syscall3": true,
     "sbrk": true,
