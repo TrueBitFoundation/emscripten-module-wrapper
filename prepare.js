@@ -2,8 +2,13 @@
 var fs = require("fs")
 var argv = require('minimist')(process.argv.slice(2))
 var execFile = require('child_process').execFile
+var ipfsAPI = require('ipfs-api')
 
 var dir = "/home/sami/emscripten-module-wrapper/"
+
+var host = "programming-progress.com"
+
+var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
 
 var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math.pow(2,32)).toString(32)
 
@@ -15,6 +20,16 @@ var wasm = "/home/sami/ocaml-offchain/interpreter/wasm"
 
 var prerun = fs.readFileSync(dir+"pre-run.js")
 var preamble = fs.readFileSync(dir+"preamble.js")
+
+function uploadIPFS(fname) {
+    return new Promise(function (cont,err) {
+        fs.readFile(tmp_dir + "/" + fname, function (err, buf) {
+            ipfs.files.add([{content:buf, path:fname}], function (err, res) {
+                cont(res[0])
+            })
+        })
+    })
+}
 
 function exec(cmd, args, dr) {
     return new Promise(function (cont,err) {
@@ -63,7 +78,9 @@ async function processTask(fname) {
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
-    await exec(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", "25", "-wasm", "globals.wasm"].concat(args))
+    await exec(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", "25", "-wasm", "globals.wasm"].concat(args))
+    var hash = await uploadIPFS("globals.wasm")
+    console.log("Uploaded to IPFS ", hash)
 }
 
 argv._.forEach(processTask)
