@@ -50,6 +50,10 @@ var implemented = {
     "getTotalMemory": true,
     "_emscripten_memcpy_big": true,
     "__syscall5": true, // open
+    "__syscall54": true, // sysctl
+    "__syscall6": true, // close
+    "__lock": true,
+    "__unlock": true,
     "___syscall4": true, // write
     "___syscall146": true, // writev
     "___syscall145": true, // readv
