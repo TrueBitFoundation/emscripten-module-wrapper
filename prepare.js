@@ -33,6 +33,7 @@ function uploadIPFS(fname) {
 
 function exec(cmd, args, dr) {
     return new Promise(function (cont,err) {
+        console.log(exec, cmd, args, dr)
         execFile(cmd, args, {cwd:dr || tmp_dir}, function (error, stdout, stderr) {
             if (stderr) console.error('error ', stderr, args)
             if (stdout) console.log('output ', stdout, args)
@@ -53,7 +54,7 @@ async function processTask(fname) {
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
     str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
     str = str.replace(/updateGlobalBufferViews\(\);/, "updateGlobalBufferViews(); addHeapHooks();")
-    str = str.replace(/FS.createStandardStreams\(\);/, "console.log('hreher'); FS.createStandardStreams(); FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'); FS.chdir('/working');")
+    str = str.replace(/FS.createStandardStreams\(\);/, "console.log('here'); FS.createStandardStreams(); FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'); FS.chdir('/working');")
     fs.writeFileSync(tmp_dir + "/prepared.js", 'var source_dir = "' + tmp_dir + '"\n' + str)
     
     var wasm_file = fname.replace(/.js$/, ".wasm")
@@ -76,9 +77,10 @@ async function processTask(fname) {
     await exec(wasm, ["-underscore", wasm_file])
     await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
+    var mem_size = argv["memory-size"] || "25"
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
-    await exec(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", "25", "-wasm", "globals.wasm"].concat(args))
+    await exec(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", "globals.wasm"].concat(args))
     var hash = await uploadIPFS("globals.wasm")
     console.log("Uploaded to IPFS ", hash)
 }

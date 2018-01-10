@@ -51,9 +51,14 @@ var implemented = {
     "_emscripten_memcpy_big": true,
     "__syscall5": true, // open
     "__syscall54": true, // sysctl
+    "__syscall140": true, // see
     "__syscall6": true, // close
     "__lock": true,
     "__unlock": true,
+    "pthread_mutex_lock": true,
+    "pthread_mutex_unlock": true,
+    "pthread_cond_broadcast": true,
+    "__cxa_atexit": true,
     "___syscall4": true, // write
     "___syscall146": true, // writev
     "___syscall145": true, // readv
@@ -71,6 +76,7 @@ for (i in global_info.env) {
     else {
         // console.log(i + ": " + typeof global_info.env[i])
         if (typeof global_info.env[i] == "function" && !implemented[i] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        // if (typeof global_info.env[i] == "function" && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
         // if (typeof global_info.env[i] == "function") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
@@ -94,7 +100,7 @@ addOnPreMain(saveGlobals)
 
 console.log(JSON.stringify(saved_globals))
 
-console.log(memory_record)
+// console.log(memory_record)
 
 // writing calls
 
