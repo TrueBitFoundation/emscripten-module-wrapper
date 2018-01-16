@@ -46,7 +46,7 @@ function exec(cmd, args, dr) {
 
 function spawnPromise(cmd, args, dr) {
     return new Promise(function (cont,err) {
-        console.log("exec: ", cmd + args.join(" "), dr)
+        console.log("exec: ", cmd + " " + args.join(" "), dr)
         const p = spawn(cmd, args, {cwd:dr || tmp_dir})
         
         p.on('error', (err) => {
@@ -88,15 +88,16 @@ async function processTask(fname) {
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
     str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
     str = str.replace(/updateGlobalBufferViews\(\);/, "updateGlobalBufferViews(); addHeapHooks();")
-    str = str.replace(/FS.createStandardStreams\(\);/, "console.log('here'); FS.createStandardStreams(); FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'); FS.chdir('/working');")
+    str = str.replace(/FS.createStandardStreams\(\);/, "FS.createStandardStreams(); FS.mkdir('/working'); FS.mount(NODEFS, { root: '.' }, '/working'); FS.chdir('/working');")
+    str = str.replace(/Module\[\"noExitRuntime\"\] = true/, 'Module["noExitRuntime"] = false')
     fs.writeFileSync(tmp_dir + "/prepared.js", 'var source_dir = "' + tmp_dir + '"\n' + str)
-    
+
     var wasm_file = fname.replace(/.js$/, ".wasm")
-    
+
     await exec("cp", [wasm_file, tmp_dir + "/" + wasm_file], process.cwd())
-    
+
     console.log(argv)
-    
+
     clean(argv, "arg")
     clean(argv, "file")
 
@@ -104,8 +105,7 @@ async function processTask(fname) {
     for (var i = 0; i < argv.file.length; i++) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
     }
-    
-    
+
     await exec("node", ["prepared.js"].concat(argv.arg))
     await exec(wasm, ["-underscore", wasm_file])
     await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
