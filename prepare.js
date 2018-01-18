@@ -107,6 +107,11 @@ async function processTask(fname) {
     }
 
     await exec("node", ["prepared.js"].concat(argv.arg))
+    
+    for (var i = 0; i < argv.file.length; i++) {
+        await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+    }
+
     await exec(wasm, ["-underscore", wasm_file])
     await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
