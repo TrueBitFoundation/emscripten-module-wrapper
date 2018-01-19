@@ -10,14 +10,16 @@ Now this file can be ran using the ocaml off-chain interpreter.
 
 Things you need:
  * emscripten. I recommend using https://github.com/juj/emsdk ... new versions of emscripten will come with new versions of node.js, needed for WebAssembly
- * LLVM with native WebAssembly support
+ * LLVM/Clang with native WebAssembly support
  * https://github.com/TrueBitFoundation/ocaml-offchain
+ * `npm install ipfs-api`
 
 For more detailed instructions, see
 https://gist.github.com/nolash/910ac3892d48d2e70232c997ffa9d55e
 and Dockerfile at https://hub.docker.com/r/mrsmkl/coindrop/
 
-Edit `prepare.js` to have the correct path .
+Edit `prepare.js` to include the correct path for wasm interpreter (default: `../ocaml-offchain/interpreter/wasm`).
+Also edit the IPFS host.
 
 ## Usage
 

@@ -5,7 +5,10 @@ var execFile = require('child_process').execFile
 var ipfsAPI = require('ipfs-api')
 
 const { spawn } = require('child_process');
-var dir = "/home/sami/emscripten-module-wrapper/"
+
+var path = require('path');
+
+var dir = path.dirname(fs.realpathSync(__filename)) + "/"
 
 var host = "programming-progress.com"
 
@@ -17,7 +20,7 @@ fs.mkdirSync(tmp_dir)
 
 console.log(tmp_dir)
 
-var wasm = "/home/sami/ocaml-offchain/interpreter/wasm"
+var wasm = dir + "../ocaml-offchain/interpreter/wasm"
 
 var prerun = fs.readFileSync(dir+"pre-run.js")
 var preamble = fs.readFileSync(dir+"preamble.js")
