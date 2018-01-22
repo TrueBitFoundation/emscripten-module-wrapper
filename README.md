@@ -8,6 +8,24 @@ Now this file can be ran using the ocaml off-chain interpreter.
 
 ## Installation instructions
 
+Install npm dependencies
+```
+npm install
+```
+
+Install emscripten:
+
+```bash
+#You can place this wherever, root directory is recommended
+git clone https://github.com/juj/emsdk.git
+
+cd emsdk
+
+LLVM_CMAKE_ARGS="-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly" emsdk install sdk-tag-1.37.28-64bit
+./emsdk activate sdk-tag-1.37.28-64bit
+source ./emsdk_env.sh #this sets up necessary path variables for current terminal session
+```
+
 Things you need:
  * emscripten. I recommend using https://github.com/juj/emsdk ... new versions of emscripten will come with new versions of node.js, needed for WebAssembly
  * LLVM/Clang with native WebAssembly support
