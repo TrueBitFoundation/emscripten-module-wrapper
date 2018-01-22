@@ -26,17 +26,13 @@ LLVM_CMAKE_ARGS="-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly" emsdk install
 source ./emsdk_env.sh #this sets up necessary path variables for current terminal session
 ```
 
-Things you need:
- * emscripten. I recommend using https://github.com/juj/emsdk ... new versions of emscripten will come with new versions of node.js, needed for WebAssembly
- * LLVM/Clang with native WebAssembly support
- * https://github.com/TrueBitFoundation/ocaml-offchain
- * `npm install ipfs-api`
-
-For more detailed instructions, see
+For more instructions for running emscripten to compile wasm see
 https://gist.github.com/nolash/910ac3892d48d2e70232c997ffa9d55e
 and Dockerfile at https://hub.docker.com/r/mrsmkl/coindrop/
 
-Edit `prepare.js` to include the correct path for wasm interpreter (default: `../ocaml-offchain/interpreter/wasm`).
+Follow installation instructions for the ocaml-offchain interpreter [here](https://github.com/TrueBitFoundation/ocaml-offchain)
+
+If necessary edit `prepare.js` to include the correct path for wasm interpreter (default: `../ocaml-offchain/interpreter/wasm`).
 Also edit the IPFS host.
 
 ## Usage
@@ -44,6 +40,8 @@ Also edit the IPFS host.
 ```
 node prepare.js file.js
 ```
+
+You can also follow along with this [tutorial](https://github.com/TrueBitFoundation/emscripten-module-wrapper/wiki/Tutorial)
 
 Options:
  * `--file fname`: add the file to the IO block of the task
