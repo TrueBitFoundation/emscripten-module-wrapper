@@ -91,6 +91,10 @@ global_info.env["getInternalFile"] = function (x) {
     return x
 }
 
+global_info.env["internalStep"] = function () {
+    console.log("get internal step number")
+}
+
 global_info.env["internalSync"] = function (x) {
     console.log("syncing internal file", x)
 }
