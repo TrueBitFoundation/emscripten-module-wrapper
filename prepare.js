@@ -41,8 +41,9 @@ function exec(cmd, args, dr) {
         execFile(cmd, args, {cwd:dr || tmp_dir}, function (error, stdout, stderr) {
             if (stderr) console.error('error ', stderr, args)
             if (stdout) console.log('output ', stdout, args)
-            if (error) err(error)
-            else cont(stdout)
+/*            if (error) err(error)
+            else cont(stdout) */
+            cont(stdout)
         })
     })
 }

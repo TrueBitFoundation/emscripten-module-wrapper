@@ -82,6 +82,29 @@ for (i in global_info.env) {
     // Find out which of there are globals
 }
 
+global_info.env["readBlock"] = function (x) {
+    console.log("Reading block not implemented here", x)
+}
+
+global_info.env["getInternalFile"] = function (x) {
+    console.log("get internal file", x)
+    return x
+}
+
+global_info.env["internalStep"] = function () {
+    console.log("get internal step number")
+}
+
+global_info.env["internalSync"] = function (x) {
+    console.log("syncing internal file", x)
+}
+
+global_info.env["internalSync2"] = function (x) {
+    console.log("syncing internal file", x)
+}
+
+// console.log(global_info.env)
+
 // console.log(global_info)
 
 var saved_globals = {}
