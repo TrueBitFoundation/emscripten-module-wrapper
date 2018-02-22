@@ -65,7 +65,11 @@ var implemented = {
     "__syscall145": true, // readv
     "__syscall146": true, // writev
     "___syscall3": true,
+    "__syscall197": true, // removexattr
+    "__syscall221": true, // fadvice64
+    "__syscall3": true,
     "sbrk": true,
+    "getenv": true,
 }
 
 for (i in global_info.env) {
