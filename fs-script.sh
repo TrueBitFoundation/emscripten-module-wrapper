@@ -9,9 +9,6 @@ emcc -o filesystem.wasm -s EXPORTED_FUNCTIONS="['_env____syscall5', '_env____sys
 '_env__internalSync', '_env__internalSync2']" -s BINARYEN=1 -s BINARYEN_ROOT="'/usr/local/'" -s SIDE_MODULE=2 filesystem.o
 
 rm filesystem.o
-./wasm -underscore filesystem.wasm
-
-# node ~/wasdk/dist/wasdk.js ez filesystem.json && ./wasm -merge ~/ocamlrun-wasm/build/ocamlrun.wasm filesystem.wasm
-
-# ./wasm -m -t -file filesystem.wasm -table-size 1024 -memory-size $[16*1024*2] -wasm merge.wasm
+../ocaml-offchain/interpreter/wasm -underscore filesystem.wasm
+mv underscore.wasm filesystem.wasm
 
