@@ -30,9 +30,16 @@ function makeStub(name, func) {
     console.log("Stub: " + name)
     return function () {
         if (trace_calls) console.log("Calling ", name, arguments)
+        // console.log("Checking", HEAP32[1024/4])
         if (recording) startMemoryRecord()
         var res = func.apply(null, arguments)
-        // console.log("what here: ", HEAP32[5153])
+        if (name == "__syscall3") {
+            console.log("FD is at", arguments[1])
+            var fd = HEAP32[arguments[1]>>2]
+            console.log("FD is", fd)
+            var stream = FS.getStream(fd)
+            console.log("stream is at", stream.position)
+        }
         if (recording_calls) {
             var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
             if (!no_return[name]) obj.result = obj.result || 0
@@ -60,16 +67,14 @@ var implemented = {
     "pthread_cond_broadcast": true,
     "__cxa_atexit": true,
     "___syscall4": true, // write
-    "___syscall146": true, // writev
-    "___syscall145": true, // readv
     "__syscall145": true, // readv
     "__syscall146": true, // writev
-    "___syscall3": true,
-    "__syscall197": true, // removexattr
+    "__syscall197": true, // fstat64
     "__syscall221": true, // fadvice64
     "__syscall3": true,
     "sbrk": true,
     "getenv": true,
+    "rintf": true,
 }
 
 for (i in global_info.env) {
@@ -78,10 +83,7 @@ for (i in global_info.env) {
         env_globals[i] = global_info.env[i]
     }
     else {
-        // console.log(i + ": " + typeof global_info.env[i])
         if (typeof global_info.env[i] == "function" && !implemented[i] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
-        // if (typeof global_info.env[i] == "function" && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
-        // if (typeof global_info.env[i] == "function") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
 }
@@ -114,6 +116,7 @@ global_info.env["internalSync2"] = function (x) {
 var saved_globals = {}
 
 function saveGlobals() {
+    HEAP32[1024 >> 2] = STACKTOP
     saved_globals = {
         mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
         env: env_globals,
@@ -121,6 +124,7 @@ function saveGlobals() {
     }
     recording_calls = true
     recording = true
+    console.log("stack top here", STACKTOP)
 }
 
 addOnPreMain(saveGlobals)
@@ -212,4 +216,5 @@ function outputRecord() {
 
 addOnExit(outputRecord)
 
+console.log("stack max", STACK_MAX)
 

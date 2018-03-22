@@ -12,7 +12,7 @@ function startMemoryRecord() {
 startMemoryRecord()
 
 var trace_memory = false
-// var trace_memory = true
+// trace_memory = true
 
 function makeWrapper(view, id) {
     var res = new Proxy(view, {
