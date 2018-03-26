@@ -114,6 +114,23 @@ void addPiece(int idx, unsigned char *bytes, int len) {
   s->file_output[idx] = p;
 }
 
+int findFile(unsigned char *name) {
+  // No empty names allowed
+  if (!name || !name[0]) return -1;
+  debugString((char*)name);
+  int index = 0;
+  struct system *s = getSystem();
+  if (!s) return -1;
+  while (s->file_name[index]) {
+      if (str_eq(s->file_name[index], name)) {
+              return index;
+      }
+      index++;
+  }
+  // No such file
+  return -1;
+}
+
 int openFile(unsigned char *name) {
   // No empty names allowed
   if (!name || !name[0]) return -1;
@@ -172,6 +189,23 @@ void initSystem() {
   name[9] = 'n';
   name[10] = 0;
   s->call_record = openFile(name);
+  name[0] = 's';
+  name[1] = 't';
+  name[2] = 'd';
+  name[3] = 'o';
+  name[4] = 'u';
+  name[5] = 't';
+  name[6] = '.';
+  name[7] = 'd';
+  name[8] = 't';
+  name[9] = 'a';
+  name[10] = 0;
+  int res = findFile(name);
+  if (res >= 0) {
+     s->pos[1] = 0;
+     s->closed[1] = 0;
+     s->ptr[1] = res;
+  }
 }
 
 void finalizeSystem() {
@@ -389,6 +423,7 @@ int env____syscall5(int which, int *varargs) {
 
 // Seeking
 int env____syscall140(int which, int *varargs) {
+  debugInt(140 + 1000000);
   struct system *s = getSystem();
   int fd = varargs[0];
   int offset_high = varargs[1];
@@ -396,7 +431,14 @@ int env____syscall140(int which, int *varargs) {
   int *result = (int*)varargs[3];
   int whence = varargs[4];
   // llseek(stream, offset_low, whence)
-  if (whence == 1) {
+  debugInt(fd);
+  debugInt(offset_high);
+  debugInt(offset_low);
+  debugInt(whence);
+  if (whence == 0) {
+    s->pos[fd] = offset_low;
+  }
+  else if (whence == 1) {
     s->pos[fd] += offset_low;
   }
   // Maybe this is seeking from end?
@@ -459,6 +501,7 @@ int env____syscall3(int which, int *varargs) {
   }
   s->pos[fd] += i;
   debugInt(i);
+  debugInt(s->pos[fd]);
   return i;
 }
 
@@ -488,6 +531,7 @@ int env____syscall146(int which, int *varargs) {
     int len = (int)iov[i*2 + 1];
     debugBuffer((char*)buf, len);
     ret += len;
+    debugInt(s->ptr[fd]);
     if (s->ptr[fd] < 0) continue;
     addPiece(s->ptr[fd], buf, len);
   }
@@ -667,8 +711,14 @@ int env____syscall295(int which, int* varargs) {
   return -1;
 }
 
-// remove xattr
+// fstat64
 int env____syscall197(int which, int* varargs) {
+  int fd = varargs[0];
+  int32_t *buf = (int32_t*)varargs[1];
+  debugInt(197 + 1000000);
+  debugInt(fd);
+  struct system *s = getSystem();
+  buf[9] = s->file_size[s->ptr[fd]];
   return 0;
 }
 
@@ -697,5 +747,7 @@ int env____cxa_atexit(int a, int b, int c) {
   return 0;
 }
 
-
+void *env____cxa_allocate_exception(size_t a) {
+  return malloc(a);
+}
 

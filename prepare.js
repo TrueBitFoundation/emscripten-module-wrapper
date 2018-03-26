@@ -18,7 +18,6 @@ var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math
 
 fs.mkdirSync(tmp_dir)
 
-console.log(tmp_dir)
 
 var wasm = dir + "../ocaml-offchain/interpreter/wasm"
 
@@ -137,6 +136,7 @@ async function processTask(fname) {
     await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
     var hash = await uploadIPFS("globals.wasm")
     console.log("Uploaded to IPFS ", hash)
+    console.log("cd", tmp_dir)
 }
 
 argv._.forEach(processTask)
