@@ -1,12 +1,10 @@
 
-var fs = require("fs")
-var argv = require('minimist')(process.argv.slice(2))
-var execFile = require('child_process').execFile
-var ipfsAPI = require('ipfs-api')
 
-const { spawn } = require('child_process');
-
-var path = require('path');
+const fs = require("fs")
+const argv = require('minimist')(process.argv.slice(2))
+const ipfsAPI = require('ipfs-api')
+const { spawn, execFile } = require('child_process')
+const path = require('path')
 
 var dir = path.dirname(fs.realpathSync(__filename)) + "/"
 
@@ -131,12 +129,25 @@ async function processTask(fname) {
         args.push("-memory-offset")
         args.push(float_memory)
     }
+    
+    if (argv.metering) {
+        var dta = fs.readFileSync(tmp_dir + "/" + result_wasm)
+        const metering = require('wasm-metering')
+        const meteredWasm = metering.meterWASM(dta, {
+            moduleStr: "env",
+            fieldStr: "usegas",
+            meterType: 'i64',
+        })
+        console.log("why wont work")
+        result_wasm = "metered.wasm"
+        var dta = fs.writeFileSync(tmp_dir + "/" + result_wasm, meteredWasm)
+    }
 
     var mem_size = argv["memory-size"] || "25"
     await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
-    var hash = await uploadIPFS("globals.wasm")
-    console.log("Uploaded to IPFS ", hash)
     console.log("cd", tmp_dir)
+    var hash = await uploadIPFS(result_wasm)
+    console.log("Uploaded to IPFS ", hash)
 }
 
 argv._.forEach(processTask)
