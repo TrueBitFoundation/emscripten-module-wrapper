@@ -1,5 +1,4 @@
 
-
 const fs = require("fs")
 const argv = require('minimist')(process.argv.slice(2))
 const ipfsAPI = require('ipfs-api')
@@ -8,7 +7,7 @@ const path = require('path')
 
 var dir = path.dirname(fs.realpathSync(__filename)) + "/"
 
-var host = "programming-progress.com"
+var host = argv["ipfs-host"] || "programming-progress.com"
 
 var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
 
@@ -48,6 +47,7 @@ function exec(cmd, args, dr) {
 function spawnPromise(cmd, args, dr) {
     return new Promise(function (cont,err) {
         console.log("exec: ", cmd + " " + args.join(" "), dr)
+        var res = ""
         const p = spawn(cmd, args, {cwd:dr || tmp_dir})
         
         p.on('error', (err) => {
@@ -56,6 +56,7 @@ function spawnPromise(cmd, args, dr) {
         });
 
         p.stdout.on('data', (data) => {
+            res += data
             console.log(`stdout: ${data}`);
         });
 
@@ -65,7 +66,7 @@ function spawnPromise(cmd, args, dr) {
 
         p.on('close', (code) => {
             console.log(`child process exited with code ${code}`);
-            cont()
+            cont(res)
         });
 
     })
@@ -138,16 +139,16 @@ async function processTask(fname) {
             fieldStr: "usegas",
             meterType: 'i64',
         })
-        console.log("why wont work")
         result_wasm = "metered.wasm"
         var dta = fs.writeFileSync(tmp_dir + "/" + result_wasm, meteredWasm)
     }
 
     var mem_size = argv["memory-size"] || "25"
-    await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    var info = await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
     console.log("cd", tmp_dir)
     var hash = await uploadIPFS(result_wasm)
     console.log("Uploaded to IPFS ", hash)
+    fs.writeFileSync("info.json", JSON.stringify({ipfshash: hash.hash, codehash: JSON.parse(info).vm.code}))
 }
 
 argv._.forEach(processTask)
