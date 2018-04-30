@@ -62,11 +62,23 @@ var implemented = {
     "__syscall6": true, // close
     "__lock": true,
     "__unlock": true,
+    "pthread_mutexattr_init": true,
+    "pthread_mutexattr_settype": true,
+    "pthread_mutexattr_destroy": true,
+    "pthread_condattr_init": true,
+    "pthread_condattr_setclock": true,
+    "pthread_condattr_destroy": true,
+    "pthread_getspecific": true,
+    "pthread_setspecific": true,
+    "pthread_key_create": true,
+    "pthread_mutex_init": true,
+    "pthread_mutex_destroy": true,
     "pthread_mutex_lock": true,
     "pthread_mutex_unlock": true,
+    "pthread_cond_init": true,
     "pthread_cond_broadcast": true,
     "__cxa_atexit": true,
-    "___syscall4": true, // write
+    "__syscall4": true, // write
     "__syscall145": true, // readv
     "__syscall146": true, // writev
     "__syscall197": true, // fstat64
