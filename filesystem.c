@@ -410,6 +410,7 @@ int env____syscall5(int which, int *varargs) {
   if (!name || !name[0]) return -1;
   int index = 0;
   if (!s) return -1;
+    debugString((char*)name);
   while (s->file_name[index]) {
       if (str_eq(s->file_name[index], name)) {
               int fd = s->next_fd;

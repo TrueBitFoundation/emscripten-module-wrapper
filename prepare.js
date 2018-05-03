@@ -133,7 +133,8 @@ async function processTask(fname) {
     }
 
     var mem_size = argv["memory-size"] || "25"
-    await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    if (argv.run) await spawnPromise(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    else await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
     var hash = await uploadIPFS("globals.wasm")
     console.log("Uploaded to IPFS ", hash)
     console.log("cd", tmp_dir)
