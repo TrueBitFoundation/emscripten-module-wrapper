@@ -6,7 +6,14 @@ emcc -o filesystem.wasm -s EXPORTED_FUNCTIONS="['_env____syscall5', '_env____sys
 '_env____syscall334', '_env____syscall180', '_env____syscall181', '_env____syscall295', '_env____lock', '_env____unlock', '_env__getenv', \
 '_env____syscall54', '_env__pthread_mutex_lock', '_env__pthread_mutex_unlock', '_env__pthread_cond_broadcast', '_env____cxa_atexit',  '_env____cxa_allocate_exception', \
 '_initSystem', '_finalizeSystem', '_callArguments', '_callReturns', '_getReturn', '_callMemory', '_env__getInternalFile', \
+'_env__pthread_mutex_lock', '_env__pthread_mutex_init', '_env__pthread_mutex_destroy', \
+'_env__pthread_mutexattr_init', '_env__pthread_mutexattr_settype', '_env__pthread_cond_init', \
+'_env__pthread_mutexattr_destroy', '_env__pthread_condattr_init', \
+'_env__pthread_getspecific', '_env__pthread_setspecific', '_env__pthread_condattr_create', '_env__pthread_condattr_setclock', '_env__pthread_condattr_destroy', '_env__pthread_key_create', \
+'_env__pthread_mutex_unlock', '_env__pthread_cond_broadcast', \
 '_env__internalSync', '_env__internalSync2']" -s BINARYEN=1 -s BINARYEN_ROOT="'/home/sami/emsdk/clang/e1.37.36_64bit/binaryen/'" -s SIDE_MODULE=2 filesystem.o
+
+
 
 rm filesystem.o
 ../ocaml-offchain/interpreter/wasm -underscore filesystem.wasm

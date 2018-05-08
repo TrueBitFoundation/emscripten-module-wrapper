@@ -42,6 +42,9 @@ struct system {
   int file_size[1024];             // File sizes. Names probably should have some maximum size
   
   int call_record; // File descriptor for call record. Used for generic system calls
+    
+    int pthread_key_counter;
+    uint32_t pthread_store[1024];
 };
 
 struct iovec {
@@ -206,6 +209,7 @@ void initSystem() {
      s->closed[1] = 0;
      s->ptr[1] = res;
   }
+    s->pthread_key_counter = 0;
 }
 
 void finalizeSystem() {
@@ -406,6 +410,7 @@ int env____syscall5(int which, int *varargs) {
   if (!name || !name[0]) return -1;
   int index = 0;
   if (!s) return -1;
+    debugString((char*)name);
   while (s->file_name[index]) {
       if (str_eq(s->file_name[index], name)) {
               int fd = s->next_fd;
@@ -729,6 +734,64 @@ int env____syscall221(int which, int* varargs) {
 
 int env__pthread_mutex_lock(void *ptr) {
   return 0;
+}
+
+int env__pthread_mutex_init(void *ptr, void *ptr2) {
+  return 0;
+}
+
+int env__pthread_mutexattr_init(void *ptr) {
+  return 0;
+}
+
+int env__pthread_mutexattr_settype(void *ptr, uint32_t a) {
+  return 0;
+}
+
+int env__pthread_mutexattr_destroy(void *ptr) {
+    return 0;
+}
+
+int env__pthread_mutex_destroy(void *ptr) {
+    return 0;
+}
+
+int env__pthread_condattr_init(void *ptr) {
+  return 0;
+}
+
+int env__pthread_cond_init(void *ptr, void *ptr2) {
+  return 0;
+}
+
+int env__pthread_getspecific(uint32_t a) {
+    struct system *s = getSystem();
+    return s->pthread_store[a];
+}
+
+int env__pthread_setspecific(int a, uint32_t b) {
+    struct system *s = getSystem();
+    s->pthread_store[a] = b;
+    return 0;
+}
+
+int env__pthread_condattr_create(void *ptr) {
+  return 0;
+}
+
+int env__pthread_condattr_setclock(void *ptr, uint32_t a) {
+  return 0;
+}
+
+int env__pthread_condattr_destroy(void *ptr) {
+  return 0;
+}
+
+int env__pthread_key_create(int *ptr, int addr) {
+    struct system *s = getSystem();
+    s->pthread_key_counter++;
+    *ptr = s->pthread_key_counter;
+    return 0;
 }
 
 int env__pthread_mutex_unlock(void *ptr) {

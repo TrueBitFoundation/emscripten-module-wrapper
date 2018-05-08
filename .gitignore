@@ -3,5 +3,4 @@ node_modules
 *tmp*
 *.prep.js
 *.o
-*.json
 *.bin
