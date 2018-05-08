@@ -15,7 +15,6 @@ var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math
 
 fs.mkdirSync(tmp_dir)
 
-
 var wasm = dir + "../ocaml-offchain/interpreter/wasm"
 
 var prerun = fs.readFileSync(dir+"pre-run.js")
@@ -25,6 +24,7 @@ function uploadIPFS(fname) {
     return new Promise(function (cont,err) {
         fs.readFile(tmp_dir + "/" + fname, function (err, buf) {
             ipfs.files.add([{content:buf, path:fname}], function (err, res) {
+                if (err) return console.log(err)
                 cont(res[0])
             })
         })
