@@ -86,7 +86,7 @@ function clean(obj, field) {
 async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
-    str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
+    str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble + "\nvar save_stack_top = false;")
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
     str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
     str = str.replace(/updateGlobalBufferViews\(\);/, "updateGlobalBufferViews(); addHeapHooks();")
@@ -116,6 +116,7 @@ async function processTask(fname) {
 
     await exec(wasm, ["-underscore", wasm_file])
     await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
+    await exec(wasm, ["-merge", wasm_file, dir + "filesystem.wasm"])
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
