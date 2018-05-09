@@ -55,7 +55,7 @@ struct iovec {
 // Global variable that will store our system
 struct system *system_ptr;
 
-struct system *getSystem();
+struct system *getSystem(void);
 void setSystem(struct system *s);
 
 int getNameLength(int ptr) {
@@ -799,6 +799,10 @@ int env__pthread_mutex_unlock(void *ptr) {
 }
 
 int env__pthread_cond_broadcast(void *ptr) {
+  return 0;
+}
+
+int env__pthread_rwlock_rdlock(void *ptr) {
   return 0;
 }
 

@@ -15,7 +15,6 @@ var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math
 
 fs.mkdirSync(tmp_dir)
 
-
 var wasm = dir + "../ocaml-offchain/interpreter/wasm"
 
 var prerun = fs.readFileSync(dir+"pre-run.js")
@@ -86,8 +85,10 @@ function clean(obj, field) {
 async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
-    if (argv.asmjs) preamble += "\nvar save_stack_top = false;"
-    else preamble += "\nvar save_stack_top = true;"
+    
+    // if (argv.asmjs) preamble += "\nvar save_stack_top = false;" else preamble += "\nvar save_stack_top = true;"
+    
+    preamble += "\nvar save_stack_top = true;"
 
     str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
@@ -117,9 +118,11 @@ async function processTask(fname) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
     }
 
-    await exec(wasm, ["-underscore", wasm_file])
-    await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
-    await exec(wasm, ["-merge", wasm_file, dir + "filesystem.wasm"])
+    if (argv.asmjs) await exec(wasm, ["-merge", wasm_file, dir + "filesystem.wasm"])
+    else {
+        await exec(wasm, ["-underscore", wasm_file])
+        await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem-wasm.wasm"])
+    }
     await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
