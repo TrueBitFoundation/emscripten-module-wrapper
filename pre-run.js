@@ -95,7 +95,7 @@ for (i in global_info.env) {
         env_globals[i] = global_info.env[i]
     }
     else {
-        if (typeof global_info.env[i] == "function" && !implemented[i] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        if (typeof global_info.env[i] == "function" && !implemented[i] && !implemented[i.substr(1)] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
 }

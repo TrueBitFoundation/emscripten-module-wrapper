@@ -86,7 +86,10 @@ function clean(obj, field) {
 async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
-    str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble + "\nvar save_stack_top = false;")
+    if (argv.asmjs) preamble += "\nvar save_stack_top = false;"
+    else preamble += "\nvar save_stack_top = true;"
+
+    str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
     str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
     str = str.replace(/updateGlobalBufferViews\(\);/, "updateGlobalBufferViews(); addHeapHooks();")
