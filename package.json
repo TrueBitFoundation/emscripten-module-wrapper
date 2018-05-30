@@ -18,6 +18,7 @@
   "homepage": "https://github.com/TrueBitFoundation/emscripten-module-wrapper#readme",
   "dependencies": {
     "ipfs-api": "^17.3.0",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "wasm-metering": "^0.2.1"
   }
 }

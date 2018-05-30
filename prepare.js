@@ -108,11 +108,13 @@ async function processTask(fname) {
     clean(argv, "file")
 
     console.log(argv)
+    /*
     for (var i = 0; i < argv.file.length; i++) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
     }
 
     await exec("node", ["prepared.js"].concat(argv.arg))
+    */
     
     for (var i = 0; i < argv.file.length; i++) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
@@ -123,7 +125,7 @@ async function processTask(fname) {
         await exec(wasm, ["-underscore", wasm_file])
         await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem-wasm.wasm"])
     }
-    await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
+    await exec(wasm, ["-add-globals", dir+"globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
@@ -151,8 +153,8 @@ async function processTask(fname) {
     }
 
     var mem_size = argv["memory-size"] || "25"
-    var info = await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
-    if (argv.run) await spawnPromise(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    var info = await spawnPromise(wasm, ["-m", "-input", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    if (argv.run) await spawnPromise(wasm, ["-m", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
     var hash = await uploadIPFS("globals.wasm")
     console.log("cd", tmp_dir)
     console.log("Uploaded to IPFS ", hash)
