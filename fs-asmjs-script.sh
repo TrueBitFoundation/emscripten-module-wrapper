@@ -13,9 +13,8 @@ emcc -o filesystem.wasm -s EXPORTED_FUNCTIONS="['_env____syscall5', '_env____sys
 '_env__pthread_mutex_unlock', '_env__pthread_cond_broadcast', '_env__pthread_rwlock_rdlock', '_env__emscripten_memcpy_big', \
 '_env__internalSync', '_env__internalSync2']" -s BINARYEN=1 -s BINARYEN_ROOT="'/home/sami/emsdk/clang/e1.37.36_64bit/binaryen/'" -s SIDE_MODULE=2 filesystem.o
 
-
-
 rm filesystem.o
-# ../ocaml-offchain/interpreter/wasm -underscore filesystem.wasm
-# mv underscore.wasm filesystem.wasm
+# ../ocaml-offchain/interpreter/wasm -export-global 3 filesystem.wasm
+# ../ocaml-offchain/interpreter/wasm -export-global 4 -name FS_STACK_MAX exported.wasm
+# mv exported.wasm filesystem.wasm
 

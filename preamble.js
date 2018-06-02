@@ -12,7 +12,7 @@ function startMemoryRecord() {
 startMemoryRecord()
 
 var trace_memory = false
-// trace_memory = true
+trace_memory = true
 
 function makeWrapper(view, id) {
     var res = new Proxy(view, {
@@ -36,8 +36,10 @@ function addHeapHooks() {
     // console.log(HEAP8[0])
     
     orig_HEAP8 = HEAP8
+    
     HEAP8 = makeWrapper(HEAP8, "heap8")
     HEAP16 = makeWrapper(HEAP16, "heap16")
     HEAP32 = makeWrapper(HEAP32, "heap32")
+    HEAPU32 = makeWrapper(HEAPU32, "heap32")
 }
 

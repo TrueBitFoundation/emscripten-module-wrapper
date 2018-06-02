@@ -86,9 +86,10 @@ async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
     
-    // if (argv.asmjs) preamble += "\nvar save_stack_top = false;" else preamble += "\nvar save_stack_top = true;"
+    if (argv.asmjs) preamble += "\nvar save_stack_top = false;"
+    else preamble += "\nvar save_stack_top = true;"
     
-    preamble += "\nvar save_stack_top = true;"
+    // preamble += "\nvar save_stack_top = true;"
 
     str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
@@ -108,14 +109,14 @@ async function processTask(fname) {
     clean(argv, "file")
 
     console.log(argv)
-    /*
-    for (var i = 0; i < argv.file.length; i++) {
-        await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+    if (argv.analyze) {
+        for (var i = 0; i < argv.file.length; i++) {
+            await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+        }
+        await exec("node", ["prepared.js"].concat(argv.arg))
+        // return
     }
 
-    await exec("node", ["prepared.js"].concat(argv.arg))
-    */
-    
     for (var i = 0; i < argv.file.length; i++) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
     }
@@ -125,10 +126,13 @@ async function processTask(fname) {
         await exec(wasm, ["-underscore", wasm_file])
         await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem-wasm.wasm"])
     }
-    await exec(wasm, ["-add-globals", dir+"globals.json", "merge.wasm"])
+    if (argv.analyze) await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
+    else if (argv.asmjs) await exec(wasm, ["-add-globals", dir+"globals-asmjs.json", "merge.wasm"])
+    else await exec(wasm, ["-add-globals", dir+"globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
+    if (argv.asmjs) args.push("-asmjs")
     var result_wasm = "globals.wasm"
     var float_memory = 10*1024
 

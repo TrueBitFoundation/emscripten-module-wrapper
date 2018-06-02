@@ -130,8 +130,10 @@ var saved_globals = {}
 function saveGlobals() {
     console.log("TOP", STACKTOP)
     console.log("HEAP", HEAP32[1024 >> 2])
-    // Why is this needed???
+    console.log("DYNAMICTOP at", DYNAMICTOP_PTR, "=", HEAP32[DYNAMICTOP_PTR >> 2], " and BASE =", DYNAMIC_BASE)
+    // Why is this needed? for some reason, it is not recorded
     if (save_stack_top) HEAP32[1024 >> 2] = STACKTOP
+    HEAP32[DYNAMICTOP_PTR>>2] = DYNAMIC_BASE;
     saved_globals = {
         mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
         env: env_globals,
