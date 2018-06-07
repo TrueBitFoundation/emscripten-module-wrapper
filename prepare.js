@@ -156,7 +156,7 @@ async function processTask(fname) {
         args.push("-memory-offset")
         args.push(float_memory)
     }
-    
+
     if (argv.metering) {
         var dta = fs.readFileSync(tmp_dir + "/" + result_wasm)
         const metering = require('wasm-metering')
