@@ -13,6 +13,18 @@ var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
 
 var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math.pow(2,32)).toString(32)
 
+var config = []
+
+function readConfig() {
+    try {
+        config = JSON.parse(fs.readFileSync(dir + "../webasm-solidity/node/config.json"))
+    }
+    catch (e) {
+    }
+}
+
+readConfig()
+
 fs.mkdirSync(tmp_dir)
 
 var wasm = dir + "../ocaml-offchain/interpreter/wasm"
@@ -132,6 +144,7 @@ async function processTask(fname) {
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
+    if (config.interpreter_args) args = args.concat(config.interpreter_args)
     if (argv.asmjs) args.push("-asmjs")
     var result_wasm = "globals.wasm"
     var float_memory = 10*1024
