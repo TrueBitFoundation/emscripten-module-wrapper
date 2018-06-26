@@ -55,7 +55,7 @@ struct iovec {
 // Global variable that will store our system
 struct system *system_ptr;
 
-struct system *getSystem();
+struct system *getSystem(void);
 void setSystem(struct system *s);
 
 int getNameLength(int ptr) {
@@ -549,7 +549,7 @@ int env____syscall4(int which, int *varargs) {
   int fd = varargs[0];
   unsigned char *buf = (unsigned char*)varargs[1];
   int count = varargs[2];
-  debugString((char*)buf);
+  debugBuffer((char*)buf, count);
   if (s->ptr[fd] < 0) return count;
   addPiece(s->ptr[fd], buf, count);
   return count;
@@ -802,8 +802,24 @@ int env__pthread_cond_broadcast(void *ptr) {
   return 0;
 }
 
+int env__pthread_rwlock_rdlock(void *ptr) {
+  return 0;
+}
+
 int env__getenv(void *ptr) {
   return 0;
+}
+
+uint32_t llvm_bswap_i32(uint32_t x) {
+    return (((x&0xff)<<24) | (((x>>8)&0xff)<<16) | (((x>>16)&0xff)<<8) | (x>>24));
+}
+
+uint64_t env__llvm_bswap_i64(uint64_t a) {
+    uint32_t l = a & 0xffffffff;
+    uint32_t h = a >> 32;
+    uint32_t retl = llvm_bswap_i32(l);
+    uint32_t reth = llvm_bswap_i32(h);
+    return reth | ((uint64_t)retl<<32);
 }
 
 int env____cxa_atexit(int a, int b, int c) {

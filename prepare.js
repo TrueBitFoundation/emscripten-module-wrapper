@@ -13,8 +13,19 @@ var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
 
 var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math.pow(2,32)).toString(32)
 
-fs.mkdirSync(tmp_dir)
+var config = []
 
+function readConfig() {
+    try {
+        config = JSON.parse(fs.readFileSync(dir + "../webasm-solidity/node/config.json"))
+    }
+    catch (e) {
+    }
+}
+
+readConfig()
+
+fs.mkdirSync(tmp_dir)
 
 var wasm = dir + "../ocaml-offchain/interpreter/wasm"
 
@@ -86,6 +97,12 @@ function clean(obj, field) {
 async function processTask(fname) {
     var str = fs.readFileSync(fname, "utf8")
     str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun)
+    
+    if (argv.asmjs) preamble += "\nvar save_stack_top = false;"
+    else preamble += "\nvar save_stack_top = true;"
+    
+    // preamble += "\nvar save_stack_top = true;"
+
     str = str.replace(/{{PREAMBLE_ADDITIONS}}/, preamble)
     str = str.replace(/var exports = null;/, "var exports = null; global_info = info;")
     str = str.replace(/buffer\.subarray\(/g, "orig_HEAP8.subarray(")
@@ -104,22 +121,31 @@ async function processTask(fname) {
     clean(argv, "file")
 
     console.log(argv)
+    if (argv.analyze) {
+        for (var i = 0; i < argv.file.length; i++) {
+            await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+        }
+        await exec("node", ["prepared.js"].concat(argv.arg))
+        // return
+    }
+
     for (var i = 0; i < argv.file.length; i++) {
         await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
     }
 
-    await exec("node", ["prepared.js"].concat(argv.arg))
-    
-    for (var i = 0; i < argv.file.length; i++) {
-        await exec("cp", [argv.file[i], tmp_dir + "/" + argv.file[i]], process.cwd())
+    if (argv.asmjs) await exec(wasm, ["-merge", wasm_file, dir + "filesystem.wasm"])
+    else {
+        await exec(wasm, ["-underscore", wasm_file])
+        await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem-wasm.wasm"])
     }
-
-    await exec(wasm, ["-underscore", wasm_file])
-    await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem.wasm"])
-    await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
+    if (argv.analyze) await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
+    else if (argv.asmjs) await exec(wasm, ["-add-globals", dir+"globals-asmjs.json", "merge.wasm"])
+    else await exec(wasm, ["-add-globals", dir+"globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
+    if (config.interpreter_args) args = args.concat(config.interpreter_args)
+    if (argv.asmjs) args.push("-asmjs")
     var result_wasm = "globals.wasm"
     var float_memory = 10*1024
 
@@ -130,7 +156,7 @@ async function processTask(fname) {
         args.push("-memory-offset")
         args.push(float_memory)
     }
-    
+
     if (argv.metering) {
         var dta = fs.readFileSync(tmp_dir + "/" + result_wasm)
         const metering = require('wasm-metering')
@@ -144,8 +170,8 @@ async function processTask(fname) {
     }
 
     var mem_size = argv["memory-size"] || "25"
-    var info = await spawnPromise(wasm, ["-m", "-input", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
-    if (argv.run) await spawnPromise(wasm, ["-m", "-file", "record.bin", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    var info = await spawnPromise(wasm, ["-m", "-input", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
+    if (argv.run) await spawnPromise(wasm, ["-m", "-table-size", "20", "-stack-size", "20", "-memory-size", mem_size, "-wasm", result_wasm].concat(args))
     var hash = await uploadIPFS("globals.wasm")
     console.log("cd", tmp_dir)
     console.log("Uploaded to IPFS ", hash)

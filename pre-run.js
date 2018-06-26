@@ -32,14 +32,14 @@ function makeStub(name, func) {
         if (trace_calls) console.log("Calling ", name, arguments)
         // console.log("Checking", HEAP32[1024/4])
         if (recording) startMemoryRecord()
-        var res = func.apply(null, arguments)
-        if (name == "__syscall3") {
+        if (name == "___syscall146") {
             console.log("FD is at", arguments[1])
             var fd = HEAP32[arguments[1]>>2]
             console.log("FD is", fd)
-            var stream = FS.getStream(fd)
-            console.log("stream is at", stream.position)
+            // var stream = FS.getStream(fd)
+            // console.log("stream is at", stream.position)
         }
+        var res = func.apply(null, arguments)
         if (recording_calls) {
             var obj = {result: res, args:Array.from(arguments), name:name, memory:(recording ? memory_record : { heap8: [], heap16: [], heap32 : [] })}
             if (!no_return[name]) obj.result = obj.result || 0
@@ -95,7 +95,7 @@ for (i in global_info.env) {
         env_globals[i] = global_info.env[i]
     }
     else {
-        if (typeof global_info.env[i] == "function" && !implemented[i] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        if (typeof global_info.env[i] == "function" && !implemented[i] && !implemented[i.substr(1)] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
     }
     // Find out which of there are globals
 }
@@ -128,15 +128,21 @@ global_info.env["internalSync2"] = function (x) {
 var saved_globals = {}
 
 function saveGlobals() {
-    HEAP32[1024 >> 2] = STACKTOP
+    console.log("TOP", STACKTOP)
+    console.log("HEAP", HEAP32[1024 >> 2])
+    console.log("DYNAMICTOP at", DYNAMICTOP_PTR, "=", HEAP32[DYNAMICTOP_PTR >> 2], " and BASE =", DYNAMIC_BASE)
+    // Why is this needed? for some reason, it is not recorded
+    if (save_stack_top) HEAP32[1024 >> 2] = STACKTOP
+    HEAP32[DYNAMICTOP_PTR>>2] = DYNAMIC_BASE;
     saved_globals = {
         mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
         env: env_globals,
         total_memory: TOTAL_MEMORY,
     }
+    console.log(env_globals)
     recording_calls = true
     recording = true
-    console.log("stack top here", STACKTOP)
+    // console.log("stack top here", STACKTOP)
 }
 
 addOnPreMain(saveGlobals)
