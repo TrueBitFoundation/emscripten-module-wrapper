@@ -25,7 +25,7 @@ fs.mkdirSync(tmp_dir);
 const fixPaths = (targetDir, relativePathsArray) => {
   return relativePathsArray.map(filePath => {
     let start = path.resolve(process.cwd(), filePath);
-    let localPath = filePath.replace('/src/', '/');
+    let localPath = filePath.replace('/workspace/src/', '/');
     let end = path.resolve(targetDir, localPath);
     fs.copySync(start, end);
     return localPath;
@@ -33,7 +33,7 @@ const fixPaths = (targetDir, relativePathsArray) => {
 };
 
 const localizeArgv = argv => {
-  console.log('before: ', argv);
+  // console.log('before: ', argv);
   //   move module
   argv._.push(argv._[0].replace(/.js$/, '.wasm'));
   fixPaths(tmp_dir, argv._);
@@ -43,7 +43,7 @@ const localizeArgv = argv => {
   fixPaths(tmp_dir, argv.file);
   argv.file = fixPaths(__dirname, argv.file);
 
-  console.log('after: ', argv);
+  // console.log('after: ', argv);
   return argv;
 };
 
@@ -154,7 +154,7 @@ async function processTask(fname) {
 
   var wasm_file = fname.replace(/.js$/, '.wasm');
 
-  await exec('cp', [wasm_file, tmp_dir + '/' + wasm_file]);
+  // await exec('cp', [wasm_file, tmp_dir + '/' + wasm_file]);
 
   //   console.log(argv);
 
@@ -171,9 +171,9 @@ async function processTask(fname) {
     // return
   }
 
-  for (var i = 0; i < argv.file.length; i++) {
-    await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
-  }
+  // for (var i = 0; i < argv.file.length; i++) {
+  //   await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
+  // }
 
   if (argv.asmjs)
     await exec(wasm, ['-merge', wasm_file, dir + 'filesystem.wasm']);
