@@ -10,7 +10,7 @@ var dir = path.dirname(fs.realpathSync(__filename)) + '/';
 
 // var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
 
-console.log(argv);
+// console.log(argv);
 
 // console.log('kill')
 // process.exit(1337)
@@ -149,12 +149,16 @@ async function processTask(fname) {
   );
   fs.writeFileSync(
     tmp_dir + '/prepared.js',
-    'var source_dir = "' + tmp_dir + '"\n' + str
+    'var source_dir = __dirname;\n' + str
   );
 
   var wasm_file = fname.replace(/.js$/, '.wasm');
 
-  // await exec('cp', [wasm_file, tmp_dir + '/' + wasm_file]);
+  try {
+    await exec('cp', [wasm_file, tmp_dir + '/' + wasm_file]);
+  } catch (e) {
+    console.log('error copying files... ');
+  }
 
   //   console.log(argv);
 
@@ -171,9 +175,13 @@ async function processTask(fname) {
     // return
   }
 
-  // for (var i = 0; i < argv.file.length; i++) {
-  //   await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
-  // }
+  try {
+    for (var i = 0; i < argv.file.length; i++) {
+      await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
+    }
+  } catch (e) {
+    console.log('error copying files... probably not necessary...');
+  }
 
   if (argv.asmjs)
     await exec(wasm, ['-merge', wasm_file, dir + 'filesystem.wasm']);
