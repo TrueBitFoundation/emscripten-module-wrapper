@@ -1,26 +1,13 @@
 const fs = require('fs-extra');
 let argv = require('minimist')(process.argv.slice(2));
-// const ipfsAPI = require('ipfs-api')
+const ipfsAPI = require('ipfs-api');
 const { spawn, execFile } = require('child_process');
 const path = require('path');
 
 var dir = path.dirname(fs.realpathSync(__filename)) + '/';
-
-// var host = argv["ipfs-host"] || "localhost"
-
-// var ipfs = ipfsAPI(host, '5001', {protocol: 'http'})
-
-// console.log(argv);
-
-// console.log('kill')
-// process.exit(1337)
-
 var tmp_dir = path.resolve(process.cwd(), argv.out);
-// __dirname +
-// '/emscripten-module-wrapper' +
-// Math.floor(Math.random() * Math.pow(2, 32)).toString(32);
 
-fs.mkdirSync(tmp_dir);
+fs.mkdirpSync(tmp_dir);
 // fix pathing so we don't need to worry about what dir we are in.
 const fixPaths = (targetDir, relativePathsArray) => {
   return relativePathsArray.map(filePath => {
@@ -32,9 +19,30 @@ const fixPaths = (targetDir, relativePathsArray) => {
   });
 };
 
+const cleanUpAfterInstrumenting = () => {
+  let absPathToDeps = argv.file
+    .map(fileName => {
+      return path.resolve(__dirname, fileName);
+    })
+    .concat(
+      argv._.map(fileName => {
+        let newPath = path.resolve(__dirname, fileName);
+        return newPath;
+      })
+    )
+    .concat(
+      argv._.map(fileName => {
+        let newPath = path.resolve(__dirname, fileName);
+        return newPath.replace(/.js$/, '.wasm');
+      })
+    );
+
+  absPathToDeps.forEach(filePath => {
+    fs.unlinkSync(filePath);
+  });
+};
+
 const localizeArgv = argv => {
-  // console.log('before: ', argv);
-  //   move module
   argv._.push(argv._[0].replace(/.js$/, '.wasm'));
   fixPaths(tmp_dir, argv._);
   argv._ = [fixPaths(__dirname, argv._)[0]];
@@ -42,8 +50,6 @@ const localizeArgv = argv => {
   // move files
   fixPaths(tmp_dir, argv.file);
   argv.file = fixPaths(__dirname, argv.file);
-
-  // console.log('after: ', argv);
   return argv;
 };
 
@@ -67,42 +73,46 @@ var prerun = fs.readFileSync(dir + 'pre-run.js');
 var preamble = fs.readFileSync(dir + 'preamble.js');
 
 function exec(cmd, args) {
-  return new Promise(function(cont, err) {
-    // console.log('exec: ', cmd, args, dr);
-    execFile(cmd, args, { cwd: tmp_dir }, function(error, stdout, stderr) {
-      if (stderr) console.error('error ', stderr, args);
-      if (stdout) console.log('output ', stdout, args);
-      if (error) console.error('error ', error);
-      cont(stdout);
+  return new Promise((resolve, reject) => {
+    execFile(cmd, args, { cwd: tmp_dir }, (error, stdout, stderr) => {
+      if (error) {
+        // console.error('error ', error);
+        reject(error);
+      }
+      if (stderr) {
+        // console.error('error ', stderr, args);
+        reject(stderr);
+      }
+      if (stdout) {
+        // console.log('output ', stdout, args);
+      }
+      resolve(stdout);
     });
   });
 }
 
 function spawnPromise(cmd, args) {
-  // console.log(cmd, dr, tmp_dir)
-  return new Promise(function(cont, err) {
-    // console.log(cont, err)
-    console.log('exec: ', cmd + ' ' + args.join(' '));
+  return new Promise((resolve, reject) => {
     var res = '';
     const p = spawn(cmd, args, { cwd: tmp_dir });
 
     p.on('error', err => {
-      console.log('Failed to start subprocess.');
-      err(error);
+      // console.log('Failed to start subprocess.');
+      reject(err);
     });
 
     p.stdout.on('data', data => {
       res += data;
-      console.log(`stdout: ${data}`);
+      // console.log(`stdout: ${data}`);
     });
 
     p.stderr.on('data', data => {
-      console.log(`stderr: ${data}`);
+      // console.log(`stderr: ${data}`);
     });
 
     p.on('close', code => {
-      console.log(`child process exited with code ${code}`);
-      cont(res);
+      // console.log(`child process exited with code ${code}`);
+      resolve(res);
     });
   });
 }
@@ -119,8 +129,6 @@ function clean(obj, field) {
 }
 
 async function processTask(fname) {
-  // console.log(fname)
-
   var str = fs.readFileSync(path.resolve(tmp_dir, fname), 'utf8');
   str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun);
 
@@ -154,33 +162,11 @@ async function processTask(fname) {
 
   var wasm_file = fname.replace(/.js$/, '.wasm');
 
-  try {
-    await exec('cp', [wasm_file, tmp_dir + '/' + wasm_file]);
-  } catch (e) {
-    console.log('error copying files... ');
-  }
-
-  //   console.log(argv);
-
   clean(argv, 'arg');
   clean(argv, 'file');
 
-  //   console.log(argv);
-
   if (argv.analyze) {
-    for (var i = 0; i < argv.file.length; i++) {
-      await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
-    }
     await exec('node', ['prepared.js'].concat(argv.arg));
-    // return
-  }
-
-  try {
-    for (var i = 0; i < argv.file.length; i++) {
-      await exec('cp', [argv.file[i], tmp_dir + '/' + argv.file[i]]);
-    }
-  } catch (e) {
-    console.log('error copying files... probably not necessary...');
   }
 
   if (argv.asmjs)
@@ -268,13 +254,39 @@ async function processTask(fname) {
       ].concat(args)
     );
 
-  console.log(info);
+  if (argv['upload-ipfs']) {
+    var host = argv['ipfs-host'] || 'localhost';
 
-  // var hash = await uploadIPFS("globals.wasm")
+    var ipfs = ipfsAPI(host, '5001', { protocol: 'http' });
 
-  // console.log("cd", tmp_dir)
-  // console.log("Uploaded to IPFS ", hash)
-  // fs.writeFileSync("info.json", JSON.stringify({ipfshash: hash.hash, codehash: JSON.parse(info).vm.code, memsize:mem_size}))
+    const uploadIPFS = fname => {
+      return new Promise(function(cont, err) {
+        fs.readFile(tmp_dir + '/' + fname, function(err, buf) {
+          ipfs.files.add([{ content: buf, path: fname }], function(err, res) {
+            cont(res[0]);
+          });
+        });
+      });
+    };
+
+    var hash = await uploadIPFS('globals.wasm');
+
+    fs.writeFileSync(
+      path.join(tmp_dir, 'info.json'),
+      JSON.stringify(
+        {
+          ipfshash: hash.hash,
+          codehash: JSON.parse(info).vm.code,
+          info: JSON.parse(info),
+          memsize: mem_size
+        },
+        null,
+        2
+      )
+    );
+  }
+
+  cleanUpAfterInstrumenting();
 }
 
 argv._.forEach(processTask);
