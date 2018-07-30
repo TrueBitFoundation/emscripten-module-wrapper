@@ -238,6 +238,7 @@ async function processTask(fname) {
       result_wasm
     ].concat(args)
   );
+
   if (argv.run)
     await spawnPromise(
       wasm,
@@ -253,6 +254,10 @@ async function processTask(fname) {
         result_wasm
       ].concat(args)
     );
+
+  if (!argv['upload-ipfs']) {
+    console.log(JSON.stringify(JSON.parse(info), null, 2));
+  }
 
   if (argv['upload-ipfs']) {
     var host = argv['ipfs-host'] || 'localhost';
@@ -271,19 +276,20 @@ async function processTask(fname) {
 
     var hash = await uploadIPFS('globals.wasm');
 
-    fs.writeFileSync(
-      path.join(tmp_dir, 'info.json'),
-      JSON.stringify(
-        {
-          ipfshash: hash.hash,
-          codehash: JSON.parse(info).vm.code,
-          info: JSON.parse(info),
-          memsize: mem_size
-        },
-        null,
-        2
-      )
+    let infoJson = JSON.stringify(
+      {
+        ipfshash: hash.hash,
+        codehash: JSON.parse(info).vm.code,
+        info: JSON.parse(info),
+        memsize: mem_size
+      },
+      null,
+      2
     );
+
+    console.log(infoJson);
+
+    fs.writeFileSync(path.join(tmp_dir, 'info.json'), infoJson);
   }
 
   cleanUpAfterInstrumenting();
