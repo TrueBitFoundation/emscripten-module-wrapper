@@ -48,4 +48,7 @@ Options:
  * `--file fname`: add the file to the IO block of the task
  * `--arg arg`: add command line argument
  * `--float`: add floating point emulation
+ * `--out`: the directory to store the results in, can be tmp if using ipfs.
+ * `--upload-ipfs`: upload to ipfs
+ * `--ipfs-host`: default is localhost
 
