@@ -406,8 +406,12 @@ int env____syscall5(int which, int *varargs) {
   unsigned char *name = (unsigned char*)varargs[0];
   int flags = varargs[1];
   int mode = varargs[2];
+    
   // No empty names allowed
   if (!name || !name[0]) return -1;
+    
+    for (int i = 0; name[i]; i++) if (name[i] == '/') name[i] = '_'; 
+    
   int index = 0;
   if (!s) return -1;
     debugString((char*)name);
