@@ -1,5 +1,5 @@
 
-// {{PRE_RUN_ADDITIONS}}
+// {{PRE_LIBRARY}}
 
 /*
 console.log(Module)
@@ -29,6 +29,7 @@ var no_return = {
 function makeStub(name, func) {
     console.log("Stub: " + name)
     return function () {
+        console.log("HERE!!!")
         if (trace_calls) console.log("Calling ", name, arguments)
         // console.log("Checking", HEAP32[1024/4])
         if (recording) startMemoryRecord()
@@ -89,36 +90,40 @@ var implemented = {
     "rintf": true,
 }
 
-for (i in global_info.env) {
-    if (typeof global_info.env[i] == "number") {
-        console.log(i + ": " + global_info.env[i])
-        env_globals[i] = global_info.env[i]
+implemented = {}
+
+function insertStubs() {
+    for (i in global_info.env) {
+        if (typeof global_info.env[i] == "number") {
+            console.log(i + ": " + global_info.env[i])
+            env_globals[i] = global_info.env[i]
+        }
+        else {
+            if (typeof global_info.env[i] == "function" && !implemented[i] && !implemented[i.substr(1)] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+        }
+        // Find out which of there are globals
     }
-    else {
-        if (typeof global_info.env[i] == "function" && !implemented[i] && !implemented[i.substr(1)] && i.substr(0,6) != "invoke") global_info.env[i] = makeStub(i, global_info.env[i])
+
+    global_info.env["readBlock"] = function (x) {
+        console.log("Reading block not implemented here", x)
     }
-    // Find out which of there are globals
-}
 
-global_info.env["readBlock"] = function (x) {
-    console.log("Reading block not implemented here", x)
-}
+    global_info.env["getInternalFile"] = function (x) {
+        console.log("get internal file", x)
+        return x
+    }
 
-global_info.env["getInternalFile"] = function (x) {
-    console.log("get internal file", x)
-    return x
-}
+    global_info.env["internalStep"] = function () {
+        console.log("get internal step number")
+    }
 
-global_info.env["internalStep"] = function () {
-    console.log("get internal step number")
-}
+    global_info.env["internalSync"] = function (x) {
+        console.log("syncing internal file", x)
+    }
 
-global_info.env["internalSync"] = function (x) {
-    console.log("syncing internal file", x)
-}
-
-global_info.env["internalSync2"] = function (x) {
-    console.log("syncing internal file", x)
+    global_info.env["internalSync2"] = function (x) {
+        console.log("syncing internal file", x)
+    }
 }
 
 // console.log(global_info.env)
@@ -132,22 +137,23 @@ function saveGlobals() {
     console.log("HEAP", HEAP32[1024 >> 2])
     console.log("DYNAMICTOP at", DYNAMICTOP_PTR, "=", HEAP32[DYNAMICTOP_PTR >> 2], " and BASE =", DYNAMIC_BASE)
     // Why is this needed? for some reason, it is not recorded
-    if (save_stack_top) HEAP32[1024 >> 2] = STACKTOP
-    HEAP32[DYNAMICTOP_PTR>>2] = DYNAMIC_BASE;
+    // if (save_stack_top) HEAP32[1024 >> 2] = STACKTOP
+    // HEAP32[DYNAMICTOP_PTR>>2] = DYNAMIC_BASE;
     saved_globals = {
         mem: [].concat.apply([], memory_record.heap32.filter(x => typeof x == "object")),
         env: env_globals,
         total_memory: TOTAL_MEMORY,
     }
-    console.log(env_globals)
+    // console.log(env_globals)
     recording_calls = true
     recording = true
     // console.log("stack top here", STACKTOP)
 }
 
+addOnPreMain(insertStubs)
 addOnPreMain(saveGlobals)
 
-console.log(JSON.stringify(saved_globals))
+// console.log(JSON.stringify(saved_globals))
 
 // console.log(memory_record)
 
@@ -234,5 +240,5 @@ function outputRecord() {
 
 addOnExit(outputRecord)
 
-console.log("stack max", STACK_MAX)
+// console.log("stack max", STACK_MAX)
 
