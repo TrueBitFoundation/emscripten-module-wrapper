@@ -139,13 +139,13 @@ async function processTask(fname) {
         await exec(wasm, ["-merge", "underscore.wasm", dir + "filesystem-wasm.wasm"])
     }
     if (argv.analyze) await exec(wasm, ["-add-globals", "globals.json", "merge.wasm"])
-    else if (argv.asmjs) await exec(wasm, ["-add-globals", dir+"globals-asmjs.json", "merge.wasm"])
+    else if (argv.asmjs) await exec(wasm, ["-asmjs", "-add-globals", dir+"globals-asmjs.json", "merge.wasm"])
     else await exec(wasm, ["-add-globals", dir+"globals.json", "merge.wasm"])
 
     var args = flatten(argv.arg.map(a => ["-arg", a]))
     args = args.concat(flatten(argv.file.map(a => ["-file", a])))
     if (config.interpreter_args) args = args.concat(config.interpreter_args)
-    if (argv.asmjs) args.push("-asmjs")
+    // if (argv.asmjs) args.push("-asmjs")
     var result_wasm = "globals.wasm"
     var float_memory = 10*1024
 
@@ -163,7 +163,7 @@ async function processTask(fname) {
         const meteredWasm = metering.meterWASM(dta, {
             moduleStr: "env",
             fieldStr: "usegas",
-            meterType: 'i64',
+            meterType: 'i32',
         })
         result_wasm = "metered.wasm"
         var dta = fs.writeFileSync(tmp_dir + "/" + result_wasm, meteredWasm)

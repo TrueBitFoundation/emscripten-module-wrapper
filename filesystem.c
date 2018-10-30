@@ -830,3 +830,24 @@ void *env____cxa_allocate_exception(size_t a) {
   return malloc(a);
 }
 
+#include <math.h>
+
+float calc_sinf(float x) {
+    float acc = 0.0f;
+    float den = 1.0f;
+    float y = x; 
+    for (int i = 1; i < 20; i += 2) {
+        acc += y/den;
+        y = -y*x*x;
+        den = den*i*(i+1);
+    }
+    return acc;
+}
+
+float env__sinf(float x) {
+    float pi = 3.141592653589793f;
+    if (x < pi) x = fmodf(x, pi);
+    return calc_sinf(x);
+}
+
+
