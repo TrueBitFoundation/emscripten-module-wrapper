@@ -27,6 +27,7 @@ const fixPaths = (targetDir, relativePathsArray) => {
   });
 };
 
+/*
 const cleanUpAfterInstrumenting = () => {
   let absPathToDeps = argv.file
     .map(fileName => {
@@ -49,16 +50,17 @@ const cleanUpAfterInstrumenting = () => {
     fs.unlinkSync(filePath);
   });
 };
+*/
 
 const localizeArgv = argv => {
   argv._.push(argv._[0].replace(/.js$/, '.wasm'));
   fixPaths(tmp_dir, argv._);
-  argv._ = [fixPaths(__dirname, argv._)[0]];
+  argv._ = [fixPaths(tmp_dir, argv._)[0]];
 
   // move files
   if (!argv.file) argv.file = []
-    fixPaths(tmp_dir, argv.file);
-  argv.file = fixPaths(__dirname, argv.file);
+     fixPaths(tmp_dir, argv.file);
+  argv.file = fixPaths(tmp_dir, argv.file);
   return argv;
 };
 
@@ -198,7 +200,8 @@ async function processTask(fname) {
     
     let flags
 
-    if (argv.analyze) flags = ['-add-globals', 'globals.json', 'merge.wasm']
+    if (argv.analyze && argv.asmjs) flags = ['-asmjs', '-add-globals', 'globals.json', 'merge.wasm']
+    else if (argv.analyze) flags = ['-add-globals', 'globals.json', 'merge.wasm']
     else if (argv.asmjs) flags = ['-asmjs', '-add-globals', dir + 'globals-asmjs.json', 'merge.wasm']
     else flags = ['-add-globals', dir + 'globals.json', 'merge.wasm']
 
