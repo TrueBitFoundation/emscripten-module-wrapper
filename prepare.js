@@ -316,7 +316,7 @@ async function processTask(fname) {
 
     fs.writeFileSync(path.join(tmp_dir, 'info.json'), infoJson);
   }
-  cleanUpAfterInstrumenting();
+  // cleanUpAfterInstrumenting();
 }
 
 argv._.forEach(processTask);
