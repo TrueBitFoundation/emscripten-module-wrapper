@@ -83,6 +83,7 @@ var preamble = fs.readFileSync(dir + 'preamble.js');
 
 function exec(cmd, args) {
   return new Promise((resolve, reject) => {
+      if (debug) console.log(cmd, args.join(" "))
     execFile(cmd, args, { cwd: tmp_dir }, (error, stdout, stderr) => {
       if (error) {
         console.error('error ', error);
@@ -103,6 +104,7 @@ function exec(cmd, args) {
 function spawnPromise(cmd, args) {
   return new Promise((resolve, reject) => {
     var res = '';
+      if (debug) console.log(cmd, args.join(" "))
     const p = spawn(cmd, args, { cwd: tmp_dir });
 
     p.on('error', err => {
