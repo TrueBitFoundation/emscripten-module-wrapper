@@ -20,13 +20,14 @@ const fixPaths = (targetDir, relativePathsArray) => {
   //  console.log(targetDir, relativePathsArray)
   return relativePathsArray.map(filePath => {
     let start = path.resolve(process.cwd(), filePath);
-    let localPath = filePath.replace('/workspace/src/', '/');
+    let localPath = path.basename(filePath)
     let end = path.resolve(targetDir, localPath);
     fs.copySync(start, end);
     return localPath;
   });
 };
 
+/*
 const cleanUpAfterInstrumenting = () => {
   let absPathToDeps = argv.file
     .map(fileName => {
@@ -49,16 +50,17 @@ const cleanUpAfterInstrumenting = () => {
     fs.unlinkSync(filePath);
   });
 };
+*/
 
 const localizeArgv = argv => {
   argv._.push(argv._[0].replace(/.js$/, '.wasm'));
   fixPaths(tmp_dir, argv._);
-  argv._ = [fixPaths(__dirname, argv._)[0]];
+  argv._ = [fixPaths(tmp_dir, argv._)[0]];
 
   // move files
   if (!argv.file) argv.file = []
-    fixPaths(tmp_dir, argv.file);
-  argv.file = fixPaths(__dirname, argv.file);
+     fixPaths(tmp_dir, argv.file);
+  argv.file = fixPaths(tmp_dir, argv.file);
   return argv;
 };
 
@@ -83,6 +85,7 @@ var preamble = fs.readFileSync(dir + 'preamble.js');
 
 function exec(cmd, args) {
   return new Promise((resolve, reject) => {
+      if (debug) console.log(cmd, args.join(" "))
     execFile(cmd, args, { cwd: tmp_dir }, (error, stdout, stderr) => {
       if (error) {
         console.error('error ', error);
@@ -103,6 +106,7 @@ function exec(cmd, args) {
 function spawnPromise(cmd, args) {
   return new Promise((resolve, reject) => {
     var res = '';
+      if (debug) console.log(cmd, args.join(" "))
     const p = spawn(cmd, args, { cwd: tmp_dir });
 
     p.on('error', err => {
@@ -196,7 +200,8 @@ async function processTask(fname) {
     
     let flags
 
-    if (argv.analyze) flags = ['-add-globals', 'globals.json', 'merge.wasm']
+    if (argv.analyze && argv.asmjs) flags = ['-asmjs', '-add-globals', 'globals.json', 'merge.wasm']
+    else if (argv.analyze) flags = ['-add-globals', 'globals.json', 'merge.wasm']
     else if (argv.asmjs) flags = ['-asmjs', '-add-globals', dir + 'globals-asmjs.json', 'merge.wasm']
     else flags = ['-add-globals', dir + 'globals.json', 'merge.wasm']
 
@@ -311,7 +316,7 @@ async function processTask(fname) {
 
     fs.writeFileSync(path.join(tmp_dir, 'info.json'), infoJson);
   }
-  cleanUpAfterInstrumenting();
+  // cleanUpAfterInstrumenting();
 }
 
 argv._.forEach(processTask);
