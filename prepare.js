@@ -1,3 +1,4 @@
+
 const fs = require('fs-extra');
 let argv = require('minimist')(process.argv.slice(2));
 const ipfsAPI = require('ipfs-api');
@@ -5,11 +6,18 @@ const { spawn, execFile } = require('child_process');
 const path = require('path');
 
 var dir = path.dirname(fs.realpathSync(__filename)) + '/';
-var tmp_dir = path.resolve(process.cwd(), argv.out);
+
+var tmp_dir = "/tmp/emscripten-module-wrapper" + Math.floor(Math.random() * Math.pow(2,32)).toString(32)
+if (argv.out) tmp_dir = path.resolve(process.cwd(), argv.out);
 
 fs.mkdirpSync(tmp_dir);
+
+var debug = false
+if (argv.debug) debug = true
+
 // fix pathing so we don't need to worry about what dir we are in.
 const fixPaths = (targetDir, relativePathsArray) => {
+  //  console.log(targetDir, relativePathsArray)
   return relativePathsArray.map(filePath => {
     let start = path.resolve(process.cwd(), filePath);
     let localPath = filePath.replace('/workspace/src/', '/');
@@ -48,7 +56,8 @@ const localizeArgv = argv => {
   argv._ = [fixPaths(__dirname, argv._)[0]];
 
   // move files
-  fixPaths(tmp_dir, argv.file);
+  if (!argv.file) argv.file = []
+    fixPaths(tmp_dir, argv.file);
   argv.file = fixPaths(__dirname, argv.file);
   return argv;
 };
@@ -76,15 +85,15 @@ function exec(cmd, args) {
   return new Promise((resolve, reject) => {
     execFile(cmd, args, { cwd: tmp_dir }, (error, stdout, stderr) => {
       if (error) {
-        // console.error('error ', error);
+        console.error('error ', error);
         reject(error);
       }
       if (stderr) {
-        // console.error('error ', stderr, args);
+        if (debug) console.error('error ', stderr, args);
         reject(stderr);
       }
       if (stdout) {
-        // console.log('output ', stdout, args);
+        if (debug) console.log('output ', stdout, args);
       }
       resolve(stdout);
     });
@@ -97,21 +106,21 @@ function spawnPromise(cmd, args) {
     const p = spawn(cmd, args, { cwd: tmp_dir });
 
     p.on('error', err => {
-      // console.log('Failed to start subprocess.');
+      console.log('Failed to start subprocess.');
       reject(err);
     });
 
     p.stdout.on('data', data => {
       res += data;
-      // console.log(`stdout: ${data}`);
+      if (debug) console.log(`stdout: ${data}`);
     });
 
     p.stderr.on('data', data => {
-      // console.log(`stderr: ${data}`);
+      if (debug) console.log(`stderr: ${data}`);
     });
 
     p.on('close', code => {
-      // console.log(`child process exited with code ${code}`);
+      if (debug) console.log(`child process exited with code ${code}`);
       resolve(res);
     });
   });
@@ -130,7 +139,7 @@ function clean(obj, field) {
 
 async function processTask(fname) {
   var str = fs.readFileSync(path.resolve(tmp_dir, fname), 'utf8');
-  str = str.replace(/{{PRE_RUN_ADDITIONS}}/, prerun);
+  str = str.replace(/{{PRE_LIBRARY}}/, prerun);
 
   if (argv.asmjs) preamble += '\nvar save_stack_top = false;';
   else preamble += '\nvar save_stack_top = true;';
@@ -179,20 +188,27 @@ async function processTask(fname) {
       dir + 'filesystem-wasm.wasm'
     ]);
   }
-  if (argv.analyze)
-    await exec(wasm, ['-add-globals', 'globals.json', 'merge.wasm']);
-  else if (argv.asmjs)
-    await exec(wasm, [
-      '-add-globals',
-      dir + 'globals-asmjs.json',
-      'merge.wasm'
-    ]);
-  else await exec(wasm, ['-add-globals', dir + 'globals.json', 'merge.wasm']);
+    
+    let gas = 0
+    if (argv.metering) {
+        gas = parseInt(argv.metering)
+    }
+    
+    let flags
+
+    if (argv.analyze) flags = ['-add-globals', 'globals.json', 'merge.wasm']
+    else if (argv.asmjs) flags = ['-asmjs', '-add-globals', dir + 'globals-asmjs.json', 'merge.wasm']
+    else flags = ['-add-globals', dir + 'globals.json', 'merge.wasm']
+
+    if (gas > 0) {
+        flags = ['-gas-limit', gas].concat(flags)
+    }
+    
+    await exec(wasm, flags)
 
   var args = flatten(argv.arg.map(a => ['-arg', a]));
   args = args.concat(flatten(argv.file.map(a => ['-file', a])));
   if (config.interpreter_args) args = args.concat(config.interpreter_args);
-  if (argv.asmjs) args.push('-asmjs');
   var result_wasm = 'globals.wasm';
   var float_memory = 10 * 1024;
 
@@ -209,6 +225,9 @@ async function processTask(fname) {
     args.push('-memory-offset');
     args.push(float_memory);
   }
+    
+    
+    let run_wasm = result_wasm
 
   if (argv.metering) {
     var dta = fs.readFileSync(tmp_dir + '/' + result_wasm);
@@ -216,10 +235,10 @@ async function processTask(fname) {
     const meteredWasm = metering.meterWASM(dta, {
       moduleStr: 'env',
       fieldStr: 'usegas',
-      meterType: 'i64'
+      meterType: 'i32'
     });
-    result_wasm = 'metered.wasm';
-    var dta = fs.writeFileSync(tmp_dir + '/' + result_wasm, meteredWasm);
+    run_wasm = 'metered.wasm';
+    var dta = fs.writeFileSync(tmp_dir + '/metered.wasm', meteredWasm);
   }
 
   var mem_size = argv['memory-size'] || '25';
@@ -235,7 +254,7 @@ async function processTask(fname) {
       '-memory-size',
       mem_size,
       '-wasm',
-      result_wasm
+      run_wasm
     ].concat(args)
   );
 
@@ -251,7 +270,7 @@ async function processTask(fname) {
         '-memory-size',
         mem_size,
         '-wasm',
-        result_wasm
+        run_wasm
       ].concat(args)
     );
 
@@ -274,14 +293,15 @@ async function processTask(fname) {
       });
     };
 
-    var hash = await uploadIPFS('globals.wasm');
+    var hash = await uploadIPFS(result_wasm);
 
     let infoJson = JSON.stringify(
       {
-        ipfshash: hash.hash,
-        codehash: JSON.parse(info).vm.code,
-        info: JSON.parse(info),
-        memsize: mem_size
+          ipfshash: hash.hash,
+          codehash: JSON.parse(info).vm.code,
+          info: JSON.parse(info),
+          memsize: mem_size,
+          gas: gas,
       },
       null,
       2
@@ -291,7 +311,6 @@ async function processTask(fname) {
 
     fs.writeFileSync(path.join(tmp_dir, 'info.json'), infoJson);
   }
-
   cleanUpAfterInstrumenting();
 }
 
