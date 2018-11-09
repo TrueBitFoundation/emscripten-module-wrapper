@@ -20,7 +20,7 @@ const fixPaths = (targetDir, relativePathsArray) => {
   //  console.log(targetDir, relativePathsArray)
   return relativePathsArray.map(filePath => {
     let start = path.resolve(process.cwd(), filePath);
-    let localPath = filePath.replace('/workspace/src/', '/');
+    let localPath = path.basename(filePath)
     let end = path.resolve(targetDir, localPath);
     fs.copySync(start, end);
     return localPath;
