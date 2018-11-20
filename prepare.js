@@ -209,6 +209,9 @@ async function processTask(fname) {
         flags = ['-gas-limit', gas].concat(flags)
     }
     
+    var mem_size = argv['memory-size'] || '25';
+    flags = ['-memory-size', mem_size].concat(flags)
+    
     await exec(wasm, flags)
 
   var args = flatten(argv.arg.map(a => ['-arg', a]));
@@ -220,18 +223,15 @@ async function processTask(fname) {
   if (argv.float) {
     await exec(wasm, ['-shift-mem', float_memory, 'globals.wasm']);
     await exec(wasm, [
-      '-memory-offset',
-      float_memory,
-      '-int-float',
-      dir + 'softfloat.wasm',
+      '-memory-offset', float_memory,
+      '-int-float', dir + 'softfloat.wasm',
       'shiftmem.wasm'
     ]);
     result_wasm = 'intfloat.wasm';
     args.push('-memory-offset');
     args.push(float_memory);
   }
-    
-    
+
     let run_wasm = result_wasm
 
   if (argv.metering) {
@@ -245,21 +245,22 @@ async function processTask(fname) {
     run_wasm = 'metered.wasm';
     var dta = fs.writeFileSync(tmp_dir + '/metered.wasm', meteredWasm);
   }
+    
+    if (argv['limit-stack']) {
+        await exec(wasm, ['-limit-stack', run_wasm]);
+        run_wasm = "stacklimit.wasm"
+    }
 
-  var mem_size = argv['memory-size'] || '25';
   var info = await spawnPromise(
     wasm,
     [
       '-m',
+        '-disable-float',
       '-input',
-      '-table-size',
-      '20',
-      '-stack-size',
-      '20',
-      '-memory-size',
-      mem_size,
-      '-wasm',
-      run_wasm
+      '-table-size', '20',
+      '-stack-size', '20',
+      '-memory-size', mem_size,
+      '-wasm', run_wasm
     ].concat(args)
   );
 
@@ -268,6 +269,7 @@ async function processTask(fname) {
       wasm,
       [
         '-m',
+        '-disable-float',
         '-table-size',
         '20',
         '-stack-size',
