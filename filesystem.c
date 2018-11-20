@@ -850,4 +850,8 @@ float env__sinf(float x) {
     return calc_sinf(x);
 }
 
+int env__gettimeofday(void *a, void *b) {
+    return 0;
+}
+
 
