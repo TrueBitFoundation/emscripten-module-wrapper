@@ -18,13 +18,14 @@ if (argv.debug) debug = true
 // fix pathing so we don't need to worry about what dir we are in.
 const fixPaths = (targetDir, relativePathsArray) => {
   //  console.log(targetDir, relativePathsArray)
-  return relativePathsArray.map(filePath => {
-    let start = path.resolve(process.cwd(), filePath);
-    let localPath = path.basename(filePath)
-    let end = path.resolve(targetDir, localPath);
-    fs.copySync(start, end);
-    return localPath;
-  });
+     if (typeof relativePathsArray == "string") relativePathsArray = [relativePathsArray]
+     return relativePathsArray.map(filePath => {
+         let start = path.resolve(process.cwd(), filePath);
+         let localPath = path.basename(filePath)
+         let end = path.resolve(targetDir, localPath);
+         fs.copySync(start, end);
+         return localPath;
+     });
 };
 
 /*
