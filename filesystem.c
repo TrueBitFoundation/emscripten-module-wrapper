@@ -643,6 +643,7 @@ int env____syscall145(int which, int* varargs) {
     s->pos[fd] += j;
     total_length += j;
   }
+  debugInt(total_length);
   return total_length;
 }
 
