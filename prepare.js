@@ -94,7 +94,7 @@ function exec(cmd, args) {
       }
       if (stderr) {
         if (debug) console.error('error ', stderr, args);
-        reject(stderr);
+        // reject(stderr);
       }
       if (stdout) {
         if (debug) console.log('output ', stdout, args);
