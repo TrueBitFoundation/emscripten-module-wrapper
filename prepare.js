@@ -28,31 +28,6 @@ const fixPaths = (targetDir, relativePathsArray) => {
      });
 };
 
-/*
-const cleanUpAfterInstrumenting = () => {
-  let absPathToDeps = argv.file
-    .map(fileName => {
-      return path.resolve(__dirname, fileName);
-    })
-    .concat(
-      argv._.map(fileName => {
-        let newPath = path.resolve(__dirname, fileName);
-        return newPath;
-      })
-    )
-    .concat(
-      argv._.map(fileName => {
-        let newPath = path.resolve(__dirname, fileName);
-        return newPath.replace(/.js$/, '.wasm');
-      })
-    );
-
-  absPathToDeps.forEach(filePath => {
-    fs.unlinkSync(filePath);
-  });
-};
-*/
-
 const localizeArgv = argv => {
   argv._.push(argv._[0].replace(/.js$/, '.wasm'));
   fixPaths(tmp_dir, argv._);
@@ -229,8 +204,6 @@ async function processTask(fname) {
       'shiftmem.wasm'
     ]);
     result_wasm = 'intfloat.wasm';
-    args.push('-memory-offset');
-    args.push(float_memory);
   }
 
     let run_wasm = result_wasm
