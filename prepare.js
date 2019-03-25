@@ -209,15 +209,18 @@ async function processTask(fname) {
     let run_wasm = result_wasm
 
   if (argv.metering) {
-    var dta = fs.readFileSync(tmp_dir + '/' + result_wasm);
-    const metering = require('wasm-metering');
-    const meteredWasm = metering.meterWASM(dta, {
-      moduleStr: 'env',
-      fieldStr: 'usegas',
-      meterType: 'i32'
-    });
+    if (!argv["rust-utils"]) {
+      var dta = fs.readFileSync(tmp_dir + '/' + result_wasm);
+      const metering = require('wasm-metering-tb');
+      const meteredWasm = metering.meterWASM(dta, {
+        moduleStr: 'env',
+        fieldStr: 'usegas',
+        meterType: 'i32'
+      });
+      fs.writeFileSync(tmp_dir + '/metered.wasm', meteredWasm);
+      }
+    else await exec('wasm-gas', [run_wasm, "metered.wasm"])
     run_wasm = 'metered.wasm';
-    var dta = fs.writeFileSync(tmp_dir + '/metered.wasm', meteredWasm);
   }
     
     if (argv['limit-stack']) {
