@@ -19,7 +19,7 @@
   "dependencies": {
     "fs-extra": "^6.0.1",
     "ipfs-api": "^17.3.0",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.3",
     "wasm-metering": "^0.2.1"
   }
 }
